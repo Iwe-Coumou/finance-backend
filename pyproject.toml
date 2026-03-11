@@ -5,7 +5,22 @@ description = "This is a self coded backend for future finance projects"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "alembic>=1.18.4",
+    "dotenv>=0.9.9",
     "numpy>=2.4.3",
     "pandas>=3.0.1",
+    "psycopg2-binary>=2.9.11",
     "sqlalchemy>=2.0.48",
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+

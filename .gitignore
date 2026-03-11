@@ -1,4 +1,4 @@
-# Python-generated files
+# Python
 __pycache__/
 *.py[oc]
 build/
@@ -9,4 +9,20 @@ wheels/
 # Virtual environments
 .venv
 
+# Environment
 .env
+
+# Alembic
+migrations/versions/*.pyc
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
