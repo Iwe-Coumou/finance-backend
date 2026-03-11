@@ -1,0 +1,11 @@
+[project]
+name = "finance-backend"
+version = "0.1.0"
+description = "This is a self coded backend for future finance projects"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=2.4.3",
+    "pandas>=3.0.1",
+    "sqlalchemy>=2.0.48",
+]
