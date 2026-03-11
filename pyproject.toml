@@ -7,10 +7,13 @@ requires-python = ">=3.12"
 dependencies = [
     "alembic>=1.18.4",
     "dotenv>=0.9.9",
+    "fredapi>=0.5.2",
     "numpy>=2.4.3",
     "pandas>=3.0.1",
     "psycopg2-binary>=2.9.11",
     "sqlalchemy>=2.0.48",
+    "yahoo-finance>=1.4.0",
+    "yfinance>=1.2.0",
 ]
 
 [tool.setuptools.packages.find]
