@@ -144,7 +144,9 @@ def store_price_data(ticker: str, df: pd.DataFrame) -> int:
         {
             "ticker": ticker,
             "date": date_idx.date(),  # type: ignore
-            "close_adjusted": float(row["close_adjusted"]) if pd.notna(row["close_adjusted"]) else None,
+            "close_adjusted": float(row["close_adjusted"])
+            if pd.notna(row["close_adjusted"])
+            else None,
             "close_raw": float(row["close"]) if pd.notna(row["close"]) else None,
             "open": float(row["open"]) if pd.notna(row["open"]) else None,
             "high": float(row["high"]) if pd.notna(row["high"]) else None,
@@ -203,8 +205,12 @@ def store_return_data(ticker: str, df: pd.DataFrame) -> int:
         {
             "ticker": ticker,
             "date": date_idx.date(),  # type: ignore
-            "daily_return": float(row["daily_return"]) if pd.notna(row["daily_return"]) else None,
-            "monthly_return": float(row["monthly_return"]) if pd.notna(row["monthly_return"]) else None,
+            "daily_return": float(row["daily_return"])
+            if pd.notna(row["daily_return"])
+            else None,
+            "monthly_return": float(row["monthly_return"])
+            if pd.notna(row["monthly_return"])
+            else None,
         }
         for date_idx, row in df.iterrows()
     ]
@@ -238,7 +244,7 @@ def store_all_returns(tickers: list, df: pd.DataFrame) -> None:
         logger.warning(f"Failed tickers: {failed}")
 
 
-def fetch_and_store(tickers: list) -> None:
+def fetch_and_store(tickers: list, start: date = date(2000, 1, 1), end=None) -> None:
     logger.info("Starting fetch and store pipeline...")
 
     prices_df = fetch_prices(tickers)
