@@ -1,0 +1,8 @@
+ticker,asset_type,quantity,purchase_price,name,currency
+KO,equity,2,75.6925,Coca-Cola Co,USD
+SC0C.DE,etf,1,152.52,Invesco STOXX Europe 600 UCITS ETF,EUR
+IS3N.DE,etf,4,39.59,iShares Core MSCI EM IMI UCITS ETF,EUR
+IDVA.AS,etf,2,7.06,iShares EURO STOXX Select Div 30 UCITS ETF,EUR
+SYBC.DE,etf,1,53.68,SPDR Bloomberg Euro Corporate Bond UCITS ETF,EUR
+SYBA.DE,etf,2,55.17,SPDR Bloomberg Euro Aggregate Bond UCITS ETF,EUR
+VUAA.DE,etf,1,113.55,Vanguard S&P 500 UCITS ETF,EUR

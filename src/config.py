@@ -18,11 +18,29 @@ def get_env_var(var: str, logger=None) -> str:
     return result
 
 
-DB_URL = os.getenv("DB_URL")
-
-
 class AssetType(Enum):
     EQUITY = "equity"
     ETF = "etf"
     BOND = "bond"
     CASH = "cash"
+    MUTUAL_FUND = "mutual_fund"
+    CRYPTO = "crypto"
+    INDEX = "index"
+    FUTURE = "future"
+    FOREX = "forex"
+    WARRANT = "warrant"
+    RIGHT = "right"
+    UNKNOWN = "unknown"
+
+
+QUOTE_TYPE_MAP = {
+    "EQUITY": AssetType.EQUITY,
+    "ETF": AssetType.ETF,
+    "MUTUALFUND": AssetType.MUTUAL_FUND,
+    "CRYPTO": AssetType.CRYPTO,
+    "INDEX": AssetType.INDEX,
+    "FUTURE": AssetType.FUTURE,
+    "CURRENCY": AssetType.FOREX,
+    "WARRANT": AssetType.WARRANT,
+    "RIGHT": AssetType.RIGHT,
+}

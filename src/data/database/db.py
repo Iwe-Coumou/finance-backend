@@ -14,18 +14,11 @@ from sqlalchemy import (
 )
 from sqlalchemy.sql import func
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
-from src.config import DB_URL, AssetType
+from src.config import AssetType, get_env_var
 
 from src.logger import get_logger
 
 logger = get_logger(__name__)
-
-try:
-    engine = create_engine(DB_URL)
-    logger.info(f"Connected to database")
-except Exception as e:
-    logger.error(f"Failed to connect to database: {e}")
-    raise
 
 
 class Base(DeclarativeBase):
@@ -153,16 +146,27 @@ def create_tables():
     """Create all tables. Safe to run multiple times."""
     logger.info("Creating tables...")
     try:
-        Base.metadata.create_all(engine)
+        Base.metadata.create_all(get_engine())
         logger.info("Tables created successfully")
     except Exception as e:
         logger.error(f"Failed to create tables: {e}")
         raise
 
 
+_engine = None
+
+
 def get_engine():
-    logger.debug("Enging requested")
-    return engine
+    global _engine
+    if _engine is not None:
+        return _engine
+    try:
+        _engine = create_engine(get_env_var("DB_URL"))
+        logger.info("Connected to database")
+        return _engine
+    except Exception as e:
+        logger.error(f"Failed to connect to database: {e}")
+        raise
 
 
 if __name__ == "__main__":
