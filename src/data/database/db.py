@@ -90,9 +90,10 @@ class FactorReturn(Base):
     date = Column(Date, nullable=False)
     value = Column(Float)
     frequency = Column(String, default="daily")  # 'daily' or 'monthly'
+    region = Column(String, nullable=False ,default='us')
 
     __table_args__ = (
-        UniqueConstraint("factor", "date", "frequency", name="uq_factor_date_freq"),
+        UniqueConstraint("factor", "date", "frequency", "region", name="uq_factor_date_freq_region"),
         Index("ix_factor_date", "factor", "date"),
     )
 

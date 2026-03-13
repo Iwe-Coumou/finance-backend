@@ -1,4 +1,4 @@
-from src.db.models import Base
+from src.data.database.db import Base
 
 from logging.config import fileConfig
 from dotenv import load_dotenv

@@ -10,16 +10,64 @@ from src.logger import get_logger
 
 logger = get_logger(__name__)
 
-DATASETS = {
-    "daily": {
-        "ff5": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_5_Factors_2x3_daily_CSV.zip",
-        "mom": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Momentum_Factor_daily_CSV.zip",
+BASE_URL = "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp"
+
+# Explicit filenames per region — French's naming is inconsistent so don't try to construct these
+DATASETS: dict[str, dict[str, dict[str, str | None]]] = {
+    "us": {
+        "daily":   {"ff5": "F-F_Research_Data_5_Factors_2x3_daily_CSV.zip",
+                    "mom": "F-F_Momentum_Factor_daily_CSV.zip"},
+        "monthly": {"ff5": "F-F_Research_Data_5_Factors_2x3_CSV.zip",
+                    "mom": "F-F_Momentum_Factor_CSV.zip"},
     },
-    "monthly": {
-        "ff5": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_5_Factors_2x3_CSV.zip",
-        "mom": "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Momentum_Factor_CSV.zip",
+    "global": {
+        "daily":   {"ff5": "Global_5_Factors_daily_CSV.zip",
+                    "mom": "Global_MOM_Factor_daily_CSV.zip"},
+        "monthly": {"ff5": "Global_5_Factors_CSV.zip",
+                    "mom": "Global_MOM_Factor_CSV.zip"},
+    },
+    "global_ex_us": {
+        "daily":   {"ff5": "Global_ex_US_5_Factors_daily_CSV.zip",
+                    "mom": "Global_ex_US_MOM_Factor_daily_CSV.zip"},
+        "monthly": {"ff5": "Global_ex_US_5_Factors_CSV.zip",
+                    "mom": "Global_ex_US_MOM_Factor_CSV.zip"},
+    },
+    "europe": {
+        "daily":   {"ff5": "Europe_5_Factors_daily_CSV.zip",
+                    "mom": "Europe_MOM_Factor_daily_CSV.zip"},
+        "monthly": {"ff5": "Europe_5_Factors_CSV.zip",
+                    "mom": "Europe_MOM_Factor_CSV.zip"},
+    },
+    "japan": {
+        "daily":   {"ff5": "Japan_5_Factors_daily_CSV.zip",
+                    "mom": "Japan_MOM_Factor_daily_CSV.zip"},
+        "monthly": {"ff5": "Japan_5_Factors_CSV.zip",
+                    "mom": "Japan_MOM_Factor_CSV.zip"},
+    },
+    "apac": {
+        "daily":   {"ff5": "Asia_Pacific_ex_Japan_5_Factors_daily_CSV.zip",
+                    "mom": "Asia_Pacific_ex_Japan_MOM_Factor_daily_CSV.zip"},
+        "monthly": {"ff5": "Asia_Pacific_ex_Japan_5_Factors_CSV.zip",
+                    "mom": "Asia_Pacific_ex_Japan_MOM_Factor_CSV.zip"},
+    },
+    "em": {
+        "daily":   None, # not available
+        "monthly": {"ff5": "Emerging_5_Factors_CSV.zip",
+                    "mom": None},
     },
 }
+
+def _build_urls(region: str, frequency: str) -> dict[str, str]:
+    if region not in DATASETS:
+        raise ValueError(f"Unknown region '{region}'. Valid options: {list(DATASETS)}")
+    files = DATASETS[region][frequency]
+    if files is None:
+        raise ValueError(f"No {frequency} data available for region '{region}'")
+    urls = {"ff5": f"{BASE_URL}/{files['ff5']}"}
+    if files.get("mom"):
+        urls["mom"] = f"{BASE_URL}/{files['mom']}"
+    return urls        
+
 
 FACTOR_COLUMN_MAP = {
     "Mkt-RF": "mkt",
@@ -28,6 +76,7 @@ FACTOR_COLUMN_MAP = {
     "RMW": "rmw",
     "CMA": "cma",
     "Mom": "mom",
+    "WML": 'mom'
 }
 
 
@@ -42,44 +91,44 @@ def download_french_csv(url: str) -> pd.DataFrame:
         with z.open(csv_filename) as f:
             raw = f.read().decode("utf-8", errors="ignore")
 
-        lines = raw.split("\n")
+    lines = raw.split("\n")
 
-        header_line = None
-        for i, line in enumerate(lines):
-            stripped = line.strip()
-            if ("Mkt-RF" in stripped or "Mom" in stripped) and stripped.startswith(","):
-                header_line = i
-                logger.debug(f"Header found at line {i}: {stripped[:60]}")
-                break
+    header_line = None
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if ("Mkt-RF" in stripped or "Mom" in stripped or "WML" in stripped) and stripped.startswith(","):
+            header_line = i
+            logger.debug(f"Header found at line {i}: {stripped[:60]}")
+            break
 
-        if header_line is None:
-            raise ValueError(f"Could not find header line in {url}")
+    if header_line is None:
+        raise ValueError(f"Could not find header line in {url}")
 
-        logger.info(f"Header at line {header_line}, scanning for data bounds")
+    logger.info(f"Header at line {header_line}, scanning for data bounds")
 
-        data_start = header_line + 1
-        end_line = len(lines)
-        found_data = None
-        for i in range(data_start, end_line):
-            stripped = lines[i].strip()
-            if stripped and stripped[0].isdigit():
-                found_data = True
-            elif found_data and not stripped:
-                end_line = i
-                break
-            elif found_data and stripped and not stripped[0].isdigit():
-                end_line = i
-                break
+    data_start = header_line + 1
+    end_line = len(lines)
+    found_data = None
+    for i in range(data_start, end_line):
+        stripped = lines[i].strip()
+        if stripped and stripped[0].isdigit():
+            found_data = True
+        elif found_data and not stripped:
+            end_line = i
+            break
+        elif found_data and stripped and not stripped[0].isdigit():
+            end_line = i
+            break
 
-        logger.debug(f"Data range: lines {data_start}-{end_line}")
+    logger.debug(f"Data range: lines {data_start}-{end_line}")
 
-        data_str = "\n".join(lines[header_line:end_line])
-        df = pd.read_csv(io.StringIO(data_str), index_col=0)
-        df.index = df.index.astype(str).str.strip()
-        df.columns = df.columns.str.strip()
+    data_str = "\n".join(lines[header_line:end_line])
+    df = pd.read_csv(io.StringIO(data_str), index_col=0)
+    df.index = df.index.astype(str).str.strip()
+    df.columns = df.columns.str.strip()
 
-        logger.info(f"Loaded Dataframe: {df.shape} from {csv_filename}")
-        return df
+    logger.info(f"Loaded Dataframe: {df.shape} from {csv_filename}")
+    return df
 
 
 def parse_index(df: pd.DataFrame, frequency: str) -> pd.DataFrame:
@@ -92,20 +141,32 @@ def parse_index(df: pd.DataFrame, frequency: str) -> pd.DataFrame:
 
 
 def fetch_factors(
-    start: date = date(2000, 1, 1), frequency: str = "daily"
+    start: date = date(2000, 1, 1), frequency: str = "daily", region: str='us'
 ) -> pd.DataFrame:
-    urls = DATASETS[frequency]
+    if region not in DATASETS:
+        raise ValueError(f"Unknown region: '{region}'. Valid options: {list(DATASETS)}")
+    
+    urls = _build_urls(region=region, frequency=frequency)
 
-    logger.info(f"Downloading FF5 {frequency}...")
+    logger.info(f"Downloading FF5 [{region}] {frequency}...")
     ff5 = download_french_csv(urls["ff5"])
-    logger.info(f"Downloading momentum {frequency}...")
-    mom = download_french_csv(urls["mom"])
+    
+    if 'mom' in urls:
+        logger.info(f"Downloading momentum [{region}] {frequency}...")
+        mom = download_french_csv(urls["mom"])
+        ff5 = ff5.drop(columns=["Mom", "WML"], errors="ignore")
+        combined = ff5.join(mom, how="inner")
+    else:
+        logger.info(f"Momentum not available for region '{region}', skipping.")
+        combined = ff5
 
-    combined = ff5.join(mom, how="inner")
+    
     combined = combined.rename(columns=FACTOR_COLUMN_MAP)
     combined = combined.drop(columns=["RF"], errors="ignore")
 
-    keep = [c for c in FACTOR_COLUMN_MAP.values() if c in combined.columns]
+    combined = combined.loc[:, ~combined.columns.duplicated(keep='first')]
+
+    keep = list(dict.fromkeys(c for c in FACTOR_COLUMN_MAP.values() if c in combined.columns))
     combined = combined[keep]
 
     combined = combined.apply(pd.to_numeric, errors="coerce") / 100
@@ -117,19 +178,20 @@ def fetch_factors(
     return combined
 
 
-def get_last_stored_factor_data(frequency: str) -> date | None:
+def get_last_stored_factor_data(frequency: str, region: str) -> date | None:
     engine = get_engine()
     with Session(engine) as session:
         result = session.execute(
             select(FactorReturn.date)
             .where(FactorReturn.frequency == frequency)
+            .where(FactorReturn.region == region)
             .order_by(FactorReturn.date.desc())
             .limit(1)
         ).scalar()
         return result
 
 
-def store_factors(df: pd.DataFrame, frequency: str = "daily") -> int:
+def store_factors(df: pd.DataFrame, frequency: str = "daily", region: str='us') -> int:
     engine = get_engine()
     inserted = 0
 
@@ -144,6 +206,7 @@ def store_factors(df: pd.DataFrame, frequency: str = "daily") -> int:
                         date=date_idx.date(),
                         value=float(value),
                         frequency=frequency,
+                        region=region,
                     )
                 )
                 inserted += 1
@@ -153,23 +216,32 @@ def store_factors(df: pd.DataFrame, frequency: str = "daily") -> int:
 
 
 def fetch_and_store_factors(
-    start: date = date(2000, 1, 1), frequency: str = "daily"
+    start: date = date(2000, 1, 1),
+    frequency: str = "daily",
+    regions: list[str] | None = None,
 ) -> None:
-    last_date = get_last_stored_factor_data(frequency)
-    incremental = last_date is not None
-    if incremental:
-        start = last_date + timedelta(days=1)
+    regions = regions or list(DATASETS.keys())
 
-    logger.info(f"Fetching {frequency} factor returns from {start}...")
-    df = fetch_factors(start=start, frequency=frequency)
+    for region in regions:
+        logger.info(f"[{region}] Starting {frequency} factor fetch...")
 
-    if df.empty:
-        logger.debug(f"No new {frequency} factor data.")
-        return
+        if DATASETS[region][frequency] is None:
+            logger.info(f"[{region}] No {frequency} data available, skipping.")
+            continue
 
-    logger.info(f"Got {len(df)} rows. Storing...")
-    inserted = store_factors(df, frequency=frequency)
-    logger.info(f"Done. {inserted} new rows inserted.")
+        last_date = get_last_stored_factor_data(frequency, region)
+        region_start = last_date + timedelta(days=1) if last_date is not None else start
+
+        logger.info(f"[{region}] Fetching from {region_start}...")
+        df = fetch_factors(start=region_start, frequency=frequency, region=region)
+
+        if df.empty:
+            logger.debug(f"[{region}] No new {frequency} factor data.")
+            continue
+
+        logger.info(f"[{region}] Got {len(df)} rows. Storing...")
+        inserted = store_factors(df, frequency=frequency, region=region)
+        logger.info(f"[{region}] Done. {inserted} new rows inserted.")
 
 
 if __name__ == "__main__":
