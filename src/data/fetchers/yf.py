@@ -1,4 +1,3 @@
-from typing import Dict
 import yfinance as yf
 from src.logger import get_logger
 from src.data.config import TEST_TICKERS
@@ -8,7 +7,6 @@ import contextlib
 import io
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy import select
 from src.data.database.db import Asset, Prices, Returns, get_engine
 from src.config import QUOTE_TYPE_MAP
 
