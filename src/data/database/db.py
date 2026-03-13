@@ -71,11 +71,11 @@ class Returns(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     ticker = Column(String, ForeignKey("assets.ticker"), nullable=False)
     date = Column(Date, nullable=False)
-    daily_return = Column(Float)
-    monthly_return = Column(Float)
+    frequency = Column(String, nullable=False)
+    value = Column(Float, nullable=False)
 
     __table_args__ = (
-        UniqueConstraint("ticker", "date", name="uq_return_ticker_date"),
+        UniqueConstraint("ticker", "date", "frequency", name="uq_return_ticker_date_freq"),
         Index("ix_return_ticker_date", "ticker", "date"),
     )
 

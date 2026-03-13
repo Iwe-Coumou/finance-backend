@@ -120,7 +120,15 @@ def compute_returns(prices: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Compute daily and monthly returns from adjusted close prices
     """
-    daily = pd.DataFrame(prices["close_adjusted"].pct_change().dropna())
+    daily = (
+        prices["close_adjusted"]
+        .groupby(level='ticker')
+        .pct_change()
+        .dropna()
+        .rename("value")
+        .reset_index()
+        .assign(frequency="daily")
+    )
     monthly = (
         prices["close_adjusted"]
         .groupby(level="ticker")
@@ -128,9 +136,11 @@ def compute_returns(prices: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
         .last()
         .pct_change()
         .dropna()
+        .rename("value")
+        .reset_index()
+        .assign(frequency="monthly")
     )
-    monthly = pd.DataFrame(monthly)
-    return (daily, monthly)
+    return pd.concat([daily, monthly], ignore_index=True)
 
 
 def store_price_data(ticker: str, df: pd.DataFrame) -> int:
@@ -202,20 +212,16 @@ def store_return_data(ticker: str, df: pd.DataFrame) -> int:
     rows = [
         {
             "ticker": ticker,
-            "date": date_idx.date(),  # type: ignore
-            "daily_return": float(row["daily_return"])
-            if pd.notna(row["daily_return"])
-            else None,
-            "monthly_return": float(row["monthly_return"])
-            if pd.notna(row["monthly_return"])
-            else None,
+            "date": row["date"].date() if hasattr(row["date"], "date") else row["date"],
+            "frequency": row["frequency"],
+            "value": float(row["value"]) if pd.notna(row["value"]) else None
         }
-        for date_idx, row in df.iterrows()
+        for _, row in df.iterrows()
     ]
     stmt = (
         insert(Returns)
         .values(rows)
-        .on_conflict_do_nothing(index_elements=["ticker", "date"])
+        .on_conflict_do_nothing(index_elements=["ticker", "date", "frequency"])
     )
     with Session(engine) as session:
         result = session.execute(stmt)
@@ -229,7 +235,7 @@ def store_all_returns(tickers: list, df: pd.DataFrame) -> None:
 
     for ticker in tickers:
         try:
-            ticker_df = df.loc[ticker]
+            ticker_df = df[df["ticker"] == ticker]
             inserted = store_return_data(ticker, ticker_df)
             logger.debug(f"Stored {inserted} rows for {ticker}")
             success_count += 1
@@ -255,15 +261,10 @@ def fetch_and_store(tickers: list, start: date = date(2000, 1, 1), end=None) -> 
         logger.error("No asset info fetched, aborting pipeline")
         return
 
-    daily, monthly = compute_returns(prices_df)
+    returns_df = compute_returns(prices_df)
 
     store_asset_data(info_df)
     store_all_prices(tickers, prices_df)
-
-    # merge into one df with both columns
-    returns_df = daily.rename(columns={"close_adjusted": "daily_return"})
-    monthly = monthly.rename(columns={"close_adjusted": "monthly_return"})
-    returns_df = returns_df.join(monthly, how="left")
     store_all_returns(tickers, returns_df)
 
     logger.info("Pipeline complete")
