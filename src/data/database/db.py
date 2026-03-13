@@ -86,7 +86,7 @@ class FactorReturn(Base):
     __tablename__ = "factor_returns"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    factor = Column(String, nullable=False)  # 'mkt', 'smb', 'hml', 'rmw', 'cma', 'mom'
+    factor = Column(String, nullable=False)  # 'mkt', 'smb', 'hml', 'rmw', 'cma', 'mom', 'rf'
     date = Column(Date, nullable=False)
     value = Column(Float)
     frequency = Column(String, default="daily")  # 'daily' or 'monthly'

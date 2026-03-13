@@ -76,12 +76,13 @@ FACTOR_COLUMN_MAP = {
     "RMW": "rmw",
     "CMA": "cma",
     "Mom": "mom",
-    "WML": 'mom'
+    "WML": 'mom',
+    "RF": 'rf',
 }
 
 
 def download_french_csv(url: str) -> pd.DataFrame:
-    logger.info(f"Fetching {url}")
+    logger.debug(f"Fetching {url}")
     response = requests.get(url, timeout=30)
     response.raise_for_status()
 
@@ -104,7 +105,7 @@ def download_french_csv(url: str) -> pd.DataFrame:
     if header_line is None:
         raise ValueError(f"Could not find header line in {url}")
 
-    logger.info(f"Header at line {header_line}, scanning for data bounds")
+    logger.debug(f"Header at line {header_line}, scanning for data bounds")
 
     data_start = header_line + 1
     end_line = len(lines)
@@ -127,7 +128,7 @@ def download_french_csv(url: str) -> pd.DataFrame:
     df.index = df.index.astype(str).str.strip()
     df.columns = df.columns.str.strip()
 
-    logger.info(f"Loaded Dataframe: {df.shape} from {csv_filename}")
+    logger.debug(f"Loaded Dataframe: {df.shape} from {csv_filename}")
     return df
 
 
@@ -162,7 +163,7 @@ def fetch_factors(
 
     
     combined = combined.rename(columns=FACTOR_COLUMN_MAP)
-    combined = combined.drop(columns=["RF"], errors="ignore")
+    logger.debug(f"Columns after rename: {combined.columns.tolist()}")
 
     combined = combined.loc[:, ~combined.columns.duplicated(keep='first')]
 
