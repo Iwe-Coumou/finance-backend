@@ -12,8 +12,10 @@ dependencies = [
     "numpy>=2.4.3",
     "pandas>=3.0.1",
     "psycopg2-binary>=2.9.11",
+    "redis>=7.3.0",
     "sdmx1>=2.25.1",
     "sqlalchemy>=2.0.48",
+    "statsmodels>=0.14.6",
     "yahoo-finance>=1.4.0",
     "yfinance>=1.2.0",
 ]
