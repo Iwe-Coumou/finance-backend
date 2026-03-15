@@ -36,8 +36,12 @@ class Asset(Base):
     currency = Column(String(3), default="XXX")
     exchange = Column(String)
     country = Column(String)
+    region = Column(String, nullable=True)
+    region_override = Column(String, nullable=True)
     sector = Column(String)
     industry = Column(String)
+    isin = Column(String, nullable=True)
+    figi = Column(String, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
 
