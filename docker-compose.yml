@@ -32,6 +32,21 @@ services:
       - timescaledb
     restart: unless-stopped
 
+  api:
+    build: .
+    container_name: finance_api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DB_URL=postgresql://postgres:finance123@timescaledb:5432/finance
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - timescaledb
+      - redis
+    restart: unless-stopped
+
 volumes:
   finance_db_data:
   finance_redis_data:
