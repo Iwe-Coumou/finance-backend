@@ -6,6 +6,7 @@ from datetime import date, timedelta
 import contextlib
 import io
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import insert
 from src.data.database.db import Asset, Prices, Returns, get_engine
 from src.config import QUOTE_TYPE_MAP
@@ -38,6 +39,7 @@ def get_ticker_info(ticker: str) -> dict:
         yf_ticker = yf.Ticker(ticker)
         with contextlib.redirect_stderr(io.StringIO()):
             info = yf_ticker.info
+            isin = yf_ticker.isin
         if not info or len(info) <= 1:
             raise ValueError(f"No data returned for {ticker}")
         logger.debug(f"Info for {ticker} recieved")
@@ -51,6 +53,7 @@ def get_ticker_info(ticker: str) -> dict:
             "country": info.get("country"),
             "sector": info.get("sector", "unknown"),
             "industry": info.get("industry", "unknown"),
+            "isin": isin if isin != '-' else None,
         }
     except Exception as e:
         logger.debug(f"{ticker} is not a valid ticker: {e}")
@@ -198,12 +201,27 @@ def store_asset_data(df: pd.DataFrame) -> int:
     engine = get_engine()
     logger.debug(f"Storing {len(df)} assets...")
     rows = df.to_dict(orient="records")
-    stmt = insert(Asset).values(rows).on_conflict_do_nothing(index_elements=["ticker"])
+    stmt = (insert(Asset)
+        .values(rows)
+        .on_conflict_do_update(
+            index_elements=["ticker"],
+            set_={
+                "name": insert(Asset).excluded.name,
+                "currency": insert(Asset).excluded.currency,
+                "exchange": insert(Asset).excluded.exchange,
+                "country": insert(Asset).excluded.country,
+                "sector": insert(Asset).excluded.sector,
+                "industry": insert(Asset).excluded.industry,
+                "isin": insert(Asset).excluded.isin,
+                "updated_at": func.now(),               
+            }
+        )
+    )
     with Session(engine) as session:
         result = session.execute(stmt)
         session.commit()
         rowcount = max(result.rowcount, 0)  # type: ignore[union-attr]
-        logger.debug(f"Stored {rowcount} assets")
+        logger.debug(f"Stored/updated {rowcount} assets")
         return rowcount
 
 
