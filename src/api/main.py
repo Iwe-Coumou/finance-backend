@@ -1,6 +1,7 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.responses import JSONResponse
 from src.api.routers import assets, factors, portfolio, screening
+from src.api.dependencies import verify_api_key
 from fastapi.middleware.cors import CORSMiddleware
 from src.logger import get_logger
 import time
@@ -16,13 +17,15 @@ app = FastAPI(
     version="0.1.0"
 )
 
-app.include_router(assets.router, prefix="/assets", tags=["assets"])
-app.include_router(factors.router, prefix="/factors", tags=["factors"])
-app.include_router(portfolio.router, prefix="/portfolio", tags=["portfolio"])
-app.include_router(screening.router, prefix="/screening", tags=["screening"])
+app.include_router(assets.router, prefix="/v1/assets", tags=["assets"], dependencies=[Depends(verify_api_key)])
+app.include_router(factors.router, prefix="/v1/factors", tags=["factors"], dependencies=[Depends(verify_api_key)])
+app.include_router(portfolio.router, prefix="/v1.portfolio", tags=["portfolio"], dependencies=[Depends(verify_api_key)])
+app.include_router(screening.router, prefix="/v1/screening", tags=["screening"], dependencies=[Depends(verify_api_key)])
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:8501"
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
