@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from src.data.retrievers.assets import get_assets
+from src.api.schemas.assets import AssetResponse
 
 router = APIRouter()
 
@@ -7,8 +8,8 @@ router = APIRouter()
 def list_assets():
     return get_assets().to_dict(orient="records")
 
-@router.get("/{ticker}")
-def get_asset(ticker: str):
+@router.get("/{ticker}", response_model=AssetResponse)
+def get_asset(ticker: str) -> AssetResponse:
     df = get_assets(tickers=ticker)
     if df.empty:
         raise HTTPException(status_code=404, detail="Asset not found")
