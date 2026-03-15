@@ -35,7 +35,7 @@ def _update_region(ticker: str, region: str, force: bool = False) -> None:
         if not asset:
             _logger.warning(f"[{ticker}] Asset not found")
             return
-        if asset.region and not force:
+        if str(asset.region) and not force:
             _logger.debug(f"[{ticker}] Region already set to '{asset.region}', skipping")
             return
         
@@ -51,6 +51,7 @@ def enrich(force: bool = False):
     asset_df = get_assets(cols=["asset_type", "country", "name", "region"])
     
     for ticker, asset in asset_df.iterrows():
+        ticker = str(ticker)
         region = _derive_region(asset)
         if region:
             _update_region(ticker, region, force=force)
