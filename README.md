@@ -1,0 +1,172 @@
+# Finance API
+
+A personal portfolio analytics API built with FastAPI, providing factor model analysis, portfolio monitoring, and stock screening capabilities.
+
+## Overview
+
+REST API that serves as the backend for portfolio management tools. Provides endpoints for factor model regression, portfolio drift detection, rebalancing recommendations, and universe screening.
+
+---
+
+## Features
+
+- **Factor Models** — Fama-French 5-factor + momentum regression for individual assets and portfolios across multiple regions (US, Europe, Japan, APAC, Emerging Markets, Global)
+- **Portfolio Monitoring** — detect factor drift, check if rebalancing is sufficient, identify sell/buy candidates
+- **Stock Screening** — dynamically generate candidate universes from factor gaps and fundamental criteria
+- **Multi-region Support** — regional factor data from Kenneth French's data library
+- **Caching** — Redis-backed caching for factor regression results
+
+---
+
+## Stack
+
+| Component | Technology |
+|-----------|------------|
+| API | FastAPI |
+| Database | TimescaleDB (PostgreSQL) |
+| Cache | Redis |
+| ORM | SQLAlchemy |
+| Migrations | Alembic |
+| Data | yfinance, Kenneth French Data Library |
+| Dashboard | [finance-dashboard](link-to-dashboard-repo) |
+
+---
+
+## Project Structure
+```
+src/
+├── api/                    # FastAPI application
+│   ├── main.py             # app setup, middleware, error handlers
+│   ├── dependencies.py     # shared dependencies, auth
+│   ├── routers/            # endpoint routers by domain
+│   │   ├── assets.py
+│   │   ├── factors.py
+│   │   ├── portfolio.py
+│   │   └── screening.py
+│   └── schemas/            # Pydantic request/response models
+├── data/
+│   ├── database/           # SQLAlchemy models and engine
+│   ├── fetchers/           # data fetchers (yfinance, French library)
+│   ├── enrichers/          # asset enrichment (region derivation)
+│   └── retrievers/         # database query functions
+└── models/
+    └── factor/             # factor regression logic
+        ├── loader.py       # data alignment
+        ├── regression.py   # OLS regression
+        └── service.py      # orchestration + caching
+```
+
+---
+
+## API Endpoints
+
+### Assets
+```
+GET  /v1/assets/              # list all assets
+GET  /v1/assets/{ticker}      # get single asset
+```
+
+### Factors
+```
+GET  /v1/factors/{ticker}     # factor regression for single asset
+GET  /v1/factors/portfolio    # factor regression for portfolio
+```
+
+### Portfolio
+```
+GET  /v1/portfolio/exposure   # current factor exposure
+GET  /v1/portfolio/gap        # gap vs target
+GET  /v1/portfolio/diagnose   # rebalance or add asset recommendation
+```
+
+### Screening
+```
+POST /v1/screening/candidates # generate candidates from factor gap
+GET  /v1/screening/universe   # list current universe
+```
+
+---
+
+## Setup
+
+### Requirements
+- Python 3.12+
+- Docker + Docker Compose
+- uv
+
+### Installation
+```bash
+git clone https://github.com/username/finance-api
+cd finance-api
+uv sync
+```
+
+### Configuration
+Create a `.env` file based on `.env.example`:
+```
+DB_URL=postgresql://postgres:password@localhost:5433/finance
+REDIS_URL=redis://localhost:6380
+API_KEY=your-api-key-here
+```
+
+### Running with Docker
+```bash
+docker compose up --build
+```
+
+### Running locally
+```bash
+# start dependencies
+docker compose up timescaledb redis -d
+
+# run migrations
+uv run alembic upgrade head
+
+# start API
+uv run fastapi dev src/api/main.py
+```
+
+### Fetching data
+```bash
+# fetch factor data (all regions)
+uv run python -m src.data.fetchers.french
+
+# fetch asset data
+uv run python -m src.data.fetchers.yfinance
+
+# run enrichment
+uv run python -m src.data.enrichers.enricher
+```
+
+---
+
+## Database Schema
+
+| Table | Description |
+|-------|-------------|
+| `assets` | Static asset metadata, region, ISIN |
+| `prices` | Daily OHLCV price data |
+| `returns` | Computed daily and monthly returns |
+| `factor_returns` | Fama-French factor returns by region and frequency |
+
+---
+
+## Authentication
+
+All endpoints require an API key passed in the `X-API-Key` header:
+```
+X-API-Key: your-api-key-here
+```
+
+---
+
+## Development
+
+### Running migrations
+```bash
+alembic revision --autogenerate -m "description"
+alembic upgrade head
+```
+
+### Project board
+Tasks and roadmap are tracked on the [GitHub Projects board](link-to-project-board).
