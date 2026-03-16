@@ -4,3 +4,5 @@ from src.data.database.db import get_engine
 
 _logger = get_logger(__name__)
 API_KEY = get_env_var("FMP_API_KEY")
+
+BASE_URL = "https://financialmodelingprep.com/stable/"
