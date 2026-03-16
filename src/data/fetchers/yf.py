@@ -89,6 +89,11 @@ def fetch_prices(
     df = df.rename(columns={"adj close": "close_adjusted"})
     df.index.names = ["ticker", "date"]
 
+    # strip timezones from date level immediately after concat
+    df = df.reset_index()
+    df["date"] = pd.to_datetime(df["date"], utc=True).dt.tz_localize(None)
+    df = df.set_index(["ticker", "date"])
+
     return df
 
 
@@ -119,10 +124,7 @@ def fetch_info(tickers: list) -> pd.DataFrame | None:
     return df
 
 
-def compute_returns(prices: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Compute daily and monthly returns from adjusted close prices
-    """
+def compute_returns(prices: pd.DataFrame) -> pd.DataFrame:
     daily = (
         prices["close_adjusted"]
         .groupby(level='ticker')
@@ -269,8 +271,11 @@ def store_all_returns(tickers: list, df: pd.DataFrame) -> None:
 def fetch_and_store(tickers: list, start: date = date(2000, 1, 1), end=None) -> None:
     logger.info("Starting fetch and store pipeline...")
 
+
     prices_df = fetch_prices(tickers)
-    info_df = fetch_info(tickers)
+    successful_tickers = prices_df.index.get_level_values("ticker").unique().to_list()
+    
+    info_df = fetch_info(successful_tickers)
 
     if prices_df is None:
         logger.error("No price data fetched, aborting pipeline")
@@ -279,11 +284,12 @@ def fetch_and_store(tickers: list, start: date = date(2000, 1, 1), end=None) -> 
         logger.error("No asset info fetched, aborting pipeline")
         return
 
+
     returns_df = compute_returns(prices_df)
 
     store_asset_data(info_df)
-    store_all_prices(tickers, prices_df)
-    store_all_returns(tickers, returns_df)
+    store_all_prices(successful_tickers, prices_df)
+    store_all_returns(successful_tickers, returns_df)
 
     logger.info("Pipeline complete")
 
