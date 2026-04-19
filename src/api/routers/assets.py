@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from src.data.retrievers.assets import get_assets
+from src.data.repositories import get_assets
 from src.api.schemas.assets import AssetResponse
 
 router = APIRouter()

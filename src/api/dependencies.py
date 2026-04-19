@@ -1,6 +1,6 @@
 # dependencies.py
 from sqlalchemy.orm import Session
-from src.data.database.db import get_engine
+from src.data.database import get_engine
 import redis
 from src.config import get_env_var
 from fastapi import Security, HTTPException
