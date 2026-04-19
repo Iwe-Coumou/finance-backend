@@ -32,8 +32,11 @@ class HTTPClient:
     def get(self, path: str, params: dict | None = None, **kwargs) -> requests.Response:
         url = f"{self.base_url}/{path.lstrip('/')}"
         merged = {**self.default_params, **(params or {})}
-        response = self.session.get(url, params=merged, timeout=self.timeout, **kwargs)
-        response.raise_for_status()
+        try:
+            response = self.session.get(url, params=merged, timeout=self.timeout, **kwargs)
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            raise requests.HTTPError(f"{e.response.status_code} Client Error for url: {url}", response=e.response)
         return response
     
     def post(self, path: str, json: dict | None = None, **kwargs) -> requests.Response:

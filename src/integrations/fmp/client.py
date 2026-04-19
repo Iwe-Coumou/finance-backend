@@ -4,7 +4,7 @@ from src.logger import get_logger
 
 _logger = get_logger(__name__)
 
-FMP_BASE_URL = "https://financialmodelingprep.com/api/v3"
+FMP_BASE_URL = "https://financialmodelingprep.com/stable"
 
 class FMPClient(HTTPClient):
     def __init__(self):

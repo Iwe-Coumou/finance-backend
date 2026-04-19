@@ -20,7 +20,7 @@ def fetch_all(tickers: list, start: date = date(2000, 1, 1), end=None):
 def main():
     from src.data.config import TEST_TICKERS
     fetch_all(TEST_TICKERS)
-    enrich_all(False)    
+    enrich_all(True)    
 
 
 if __name__ == "__main__":

@@ -93,7 +93,7 @@ def store_asset_data(df: pd.DataFrame) -> int:
         _logger.debug(f"Stored/updated {rowcount} assets")
         return rowcount
     
-def update_figis(figi_map: dict[str, str], force: bool = False):
+def update_figis(figi_map: dict[str, str], force: bool = False) -> None:
     with get_session() as session:
         for ticker, figi in figi_map.items():
             asset = session.execute(
@@ -130,3 +130,21 @@ def update_asset_region(ticker: str, region: str, force: bool = False) -> None:
             .values(region=region, updated_at=func.now())
         )
     _logger.debug(f"[{ticker}] Region set to '{region}'")
+    
+def update_isins(isin_map: dict[str, str], force: bool = False) -> None:
+    with get_session() as session:
+        for ticker, isin in isin_map.items():
+            asset = session.execute(
+                select(Asset).where(Asset.ticker == ticker)
+            ).scalar_one_or_none()
+
+            if not asset:
+                _logger.warning(f"[{ticker}] Asset not found")
+                continue
+            if asset.isin and not force:
+                _logger.debug(f"[{ticker}] ISIN already set to '{asset.isin}', skipping")
+                continue
+
+            asset.isin = isin
+            asset.updated_at = func.now()
+            _logger.debug(f"[{ticker}] ISIN set to '{isin}'")
