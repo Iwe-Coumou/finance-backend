@@ -120,7 +120,7 @@ def update_asset_region(ticker: str, region: str, force: bool = False) -> None:
         if not asset:
             _logger.warning(f"[{ticker}] Asset not found")
             return
-        if asset.region and not force:
+        if str(asset.region) and not force:
             _logger.debug(f"[{ticker}] Region already set to '{asset.region}', skipping")
             return
 

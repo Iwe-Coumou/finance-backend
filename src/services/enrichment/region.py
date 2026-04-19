@@ -30,6 +30,7 @@ def enrich(force: bool = False):
     _logger.info(f"Starting region enrichment for {len(asset_df)} assets...")
 
     for ticker, asset in asset_df.iterrows():
+        ticker = str(ticker)
         region = _derive_region(asset)
         if region:
             update_asset_region(ticker, region, force=force)
