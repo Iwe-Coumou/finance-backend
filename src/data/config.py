@@ -1,4 +1,4 @@
-TEST_TICKERS = ["AAPL", "KO", "MSFT"]
+TEST_TICKERS = ["AAPL", "KO", "MSFT", "ASML.AS", "MC.PA", "SAP.DE", "SHEL.L", "7203.T", "0700.HK", "INFY.NS"]
 
 COUNTRY_TO_REGION = {
     # North America
@@ -53,4 +53,25 @@ COUNTRY_TO_REGION = {
     "Saudi Arabia": "em",
     "UAE": "em",
     "Qatar": "em",
+}
+
+
+YF_TO_OPENFIGI_EXCHANGE = {
+    "NMS": "UW",   # NASDAQ Global Select
+    "NYQ": "UN",   # NYSE
+    "NGM": "UW",   # NASDAQ Global Market
+    "NCM": "UR",   # NASDAQ Capital Market
+    "BTS": "US",   # OTC
+    "LSE": "LN",   # London Stock Exchange
+    "GER": "GY",   # Xetra
+    "PAR": "FP",   # Euronext Paris
+    "AMS": "NA",   # Euronext Amsterdam
+    "JPX": "JT",   # Tokyo Stock Exchange
+    "OSA": "JP",   # Osaka
+    "HKG": "HK",   # Hong Kong
+    "NSI": "IS",   # NSE India
+    "SHG": "CG",   # Shanghai
+    "SHE": "CS",   # Shenzhen
+    "ASX": "AN",   # Australian Securities Exchange
+    "TSX": "CT",   # Toronto
 }
