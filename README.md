@@ -27,7 +27,7 @@ REST API that serves as the backend for portfolio management tools. Provides end
 | Cache | Redis |
 | ORM | SQLAlchemy |
 | Migrations | Alembic |
-| Data | yfinance, Kenneth French Data Library |
+| Data | yfinance, Kenneth French Data Library, FRED, FMP, OpenFIGI |
 | Dashboard | [finance-dashboard](link-to-dashboard-repo) |
 
 ---
@@ -35,25 +35,57 @@ REST API that serves as the backend for portfolio management tools. Provides end
 ## Project Structure
 ```
 src/
-├── api/                    # FastAPI application
-│   ├── main.py             # app setup, middleware, error handlers
-│   ├── dependencies.py     # shared dependencies, auth
-│   ├── routers/            # endpoint routers by domain
+├── api/                        # FastAPI application
+│   ├── main.py                 # app setup, middleware, error handlers
+│   ├── dependencies.py         # shared dependencies, auth
+│   ├── routers/                # endpoint routers by domain
 │   │   ├── assets.py
 │   │   ├── factors.py
 │   │   ├── portfolio.py
 │   │   └── screening.py
-│   └── schemas/            # Pydantic request/response models
+│   └── schemas/                # Pydantic request/response models
 ├── data/
-│   ├── database/           # SQLAlchemy models and engine
-│   ├── fetchers/           # data fetchers (yfinance, French library)
-│   ├── enrichers/          # asset enrichment (region derivation)
-│   └── retrievers/         # database query functions
-└── models/
-    └── factor/             # factor regression logic
-        ├── loader.py       # data alignment
-        ├── regression.py   # OLS regression
-        └── service.py      # orchestration + caching
+│   ├── database/               # SQLAlchemy models and engine
+│   ├── repositories/           # database read/write functions
+│   │   ├── assets.py
+│   │   ├── prices.py
+│   │   ├── returns.py
+│   │   ├── factors.py
+│   │   ├── macro.py
+│   │   ├── enriched.py
+│   │   └── regimes.py
+│   └── config.py               # exchange maps, constants
+├── integrations/               # external API/library clients
+│   ├── base.py                 # shared HTTP client base class
+│   ├── yf.py                   # yfinance
+│   ├── fred.py                 # FRED macro data
+│   ├── french.py               # Kenneth French data library
+│   ├── fmp/                    # Financial Modeling Prep
+│   │   ├── client.py
+│   │   └── profile.py
+│   └── openfigi/               # OpenFIGI identifier mapping
+│       ├── client.py
+│       └── figi.py
+├── services/
+│   ├── sync/                   # fetch + store pipelines
+│   │   ├── yf.py
+│   │   ├── french.py
+│   │   ├── fred.py
+│   │   └── main.py             # orchestrates all syncs + enrichment
+│   ├── enrichment/             # asset enrichment pipelines
+│   │   ├── isin.py
+│   │   ├── figi.py
+│   │   ├── region.py
+│   │   └── main.py
+│   └── transforms/             # pure data transformations
+│       └── returns.py
+├── models/
+│   └── factor/                 # factor regression logic
+│       ├── loader.py           # data alignment
+│       ├── regression.py       # OLS regression
+│       └── service.py          # orchestration + caching
+├── config.py                   # environment variable helpers
+└── logger.py                   # logging setup
 ```
 
 ---
@@ -126,16 +158,10 @@ uv run alembic upgrade head
 uv run fastapi dev src/api/main.py
 ```
 
-### Fetching data
+### Syncing data
 ```bash
-# fetch factor data (all regions)
-uv run python -m src.data.fetchers.french
-
-# fetch asset data
-uv run python -m src.data.fetchers.yfinance
-
-# run enrichment
-uv run python -m src.data.enrichers.enricher
+# full sync (prices, factors, macro) + enrichment (ISIN, FIGI, region)
+uv run python -m src.services.sync.main
 ```
 
 ---
