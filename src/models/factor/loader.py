@@ -1,8 +1,7 @@
 import pandas as pd
 from datetime import date, timedelta
-from sqlalchemy.orm import Session
 from sqlalchemy import select
-from src.data.database.db import FactorReturn, Returns, get_engine
+from src.data.database import FactorReturn, Returns, get_session
 from src.logger import get_logger
 
 _logger = get_logger(__name__)
@@ -21,10 +20,8 @@ def load_aligned_data(
     _logger.info(f"Loading aligned data for {tickers} | region={region} frequency={frequency} range={start} to {end}")
 
     return_col = Returns.value
-    
-    engine = get_engine()
-    
-    with Session(engine) as session:
+
+    with get_session() as session:
         factor_rows = session.execute(
             select(FactorReturn.date, FactorReturn.factor, FactorReturn.value)
             .where(FactorReturn.region == region)
