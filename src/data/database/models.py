@@ -140,3 +140,29 @@ class RegimeHistory(Base):
     label = Column(String)  # e.g. "Bull / Low Vol"
     confidence = Column(Float)  # probability of assigned state
     created_at = Column(DateTime, server_default=func.now())
+    
+class Fundamentals(Base):
+    """Asset Fundamentals."""
+    
+    __tablename__ = "fundamentals"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ticker = Column(String, ForeignKey("assets.ticker"), nullable=False)
+    snapshot_date = Column(Date, nullable=False)
+    market_cap = Column(Float)
+    beta = Column(Float)
+    pe_ratio = Column(Float)
+    eps = Column(Float)
+    dividend_yield = Column(Float)
+    avg_volume = Column(Float)
+    revenue = Column(Float)
+    net_income = Column(Float)
+    debt_to_equity = Column(Float)
+    roe = Column(Float)
+    operating_margin = Column(Float)
+    updated_at = Column(DateTime, server_default=func.now())
+    
+    __table_args__ = (
+        UniqueConstraint("ticker", "snapshot_date", name="uq_fundamentals_ticker_date"),
+        Index("ix_fundamentals_ticker", "ticker"),
+    )
