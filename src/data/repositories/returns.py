@@ -1,6 +1,8 @@
 from src.data.database import get_session, Returns
 from src.logger import get_logger
+from datetime import date
 import pandas as pd
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
 _logger = get_logger(__name__)
@@ -43,3 +45,17 @@ def store_all_returns(tickers: list, df: pd.DataFrame) -> None:
     _logger.info(f"Stored returns for {success_count}/{len(tickers)} tickers")
     if failed:
         _logger.warning(f"Failed tickers: {failed}")
+        
+def get_returns(tickers: list[str], frequency: str, start: date, end: date) -> pd.DataFrame:
+    _logger.debug(f"Fetching returns for {tickers} | frequency={frequency} range={start} to {end}")
+    with get_session() as session:
+        rows = session.execute(
+            select(Returns.ticker, Returns.date, Returns.value)
+            .where(Returns.ticker.in_(tickers))
+            .where(Returns.frequency == frequency)
+            .where(Returns.date >= start)
+            .where(Returns.date <= end)
+        ).all()
+    df = pd.DataFrame(rows, columns=["ticker", "date", "value"])
+    _logger.debug(f"Fetched {len(df)} return rows")
+    return df

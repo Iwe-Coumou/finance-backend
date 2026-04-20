@@ -6,8 +6,8 @@ from src.data.config import TEST_TICKERS
 
 import redis
 
-from src.models.factor.loader import load_aligned_data
-from src.models.factor.regression import run_regressions, FactorRegressionResult
+from src.services.factor.data_alignment import load_aligned_data
+from src.models.factor import run_regressions, FactorRegressionResult
 from src.config import get_env_var
 from src.logger import get_logger
 

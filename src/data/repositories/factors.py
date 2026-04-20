@@ -41,3 +41,17 @@ def store_factors(df: pd.DataFrame, frequency: str = "daily", region: str='us') 
 
     _logger.debug(f"Stored {inserted} factor rows for {region} ({frequency})")
     return inserted
+
+def get_factor_returns(region: str, frequency: str, start: date, end: date) -> pd.DataFrame:
+    _logger.debug(f"Fetching factor returns | region={region} frequency={frequency} range={start} to {end}")
+    with get_session() as session:
+        rows = session.execute(
+            select(FactorReturn.date, FactorReturn.factor, FactorReturn.value)
+            .where(FactorReturn.region == region)
+            .where(FactorReturn.frequency == frequency)
+            .where(FactorReturn.date >= start)
+            .where(FactorReturn.date <= end)
+        ).all()
+    df = pd.DataFrame(rows, columns=["date", "factor", "value"])
+    _logger.debug(f"Fetched {len(df)} factor returns")
+    return df
