@@ -19,7 +19,7 @@ app = FastAPI(
 
 app.include_router(assets.router, prefix="/v1/assets", tags=["assets"], dependencies=[Depends(verify_api_key)])
 app.include_router(factors.router, prefix="/v1/factors", tags=["factors"], dependencies=[Depends(verify_api_key)])
-app.include_router(portfolio.router, prefix="/v1.portfolio", tags=["portfolio"], dependencies=[Depends(verify_api_key)])
+app.include_router(portfolio.router, prefix="/v1/portfolio", tags=["portfolio"], dependencies=[Depends(verify_api_key)])
 app.include_router(screening.router, prefix="/v1/screening", tags=["screening"], dependencies=[Depends(verify_api_key)])
 app.add_middleware(
     CORSMiddleware,

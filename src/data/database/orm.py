@@ -166,3 +166,34 @@ class Fundamentals(Base):
         UniqueConstraint("ticker", "snapshot_date", name="uq_fundamentals_ticker_date"),
         Index("ix_fundamentals_ticker", "ticker"),
     )
+    
+class Portfolio(Base):
+    """Portfolios"""
+    
+    __tablename__ = "portfolios"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False)
+    source = Column(String, nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+    
+    __table_args__ = (
+        UniqueConstraint("name", "source", name="uq_portfolio_name_source"),
+    )
+    
+class PortfolioHolding(Base):
+    """Holdings of the portfolios"""
+    __tablename__ = "portfolio_holdings"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    portfolio_id = Column(Integer, ForeignKey("portfolios.id"), nullable=False)
+    ticker = Column(String, ForeignKey("assets.ticker"), nullable=False)
+    weight = Column(Float, nullable=False)
+    quantity = Column(Float, nullable=False)
+    cost_basis = Column(Float, nullable=True)
+    snapshot_date = Column(Date, nullable=False)
+    
+    __table_args__ = (
+        UniqueConstraint("portfolio_id", "ticker", "snapshot_date", name="uq_holding_portfolio_ticker_date"),
+        Index("ix_holding_portfolio_date", "portfolio_id", "snapshot_date")
+    )
