@@ -1,7 +1,9 @@
 from src.logger import get_logger
 import pandas as pd
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from src.data.database import Prices, get_session
+from datetime import date
 
 
 _logger = get_logger(__name__)
@@ -52,3 +54,25 @@ def store_all_prices(tickers: list, df: pd.DataFrame):
     _logger.info(f"Stored prices for {success_count}/{len(tickers)} tickers")
     if failed:
         _logger.warning(f"Failed tickers: {failed}")
+        
+def get_prices(
+    tickers: list[str] | None = None,
+    start: date | None = None,
+    end: date | None = None
+) -> pd.DataFrame:
+    _logger.debug(f"Fetching prices | tickers={tickers} range={start} to {end}")
+    query = select(Prices)
+    if tickers is not None:
+        query = query.where(Prices.ticker.in_(tickers))
+    if start is not None:
+        query = query.where(Prices.date >= start)
+    if end is not None:
+        query = query.where(Prices.date <= end)
+    with get_session() as session:
+        rows = session.execute(query).scalars().all()
+    _logger.debug(f"Fetched {len(rows)} price rows")
+    return pd.DataFrame([{
+        "ticker": r.ticker, "date": r.date, "close_adjusted": r.close_adjusted,
+        "close_raw": r.close_raw, "open": r.open, "high": r.high,
+        "low": r.low, "volume": r.volume
+    } for r in rows])

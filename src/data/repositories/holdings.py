@@ -1,3 +1,4 @@
+import pandas as pd
 from src.logger import get_logger
 from src.data.database import get_session, PortfolioHolding
 from sqlalchemy import select
@@ -24,3 +25,18 @@ def get_holdings(
         
     _logger.debug(f"Found {len(rows)} holdings for portfolio_id={portfolio_id}")
     return rows
+
+def get_holdings_df(
+    portfolio_id: int | None = None, 
+    ticker: str | None = None,
+    snapshot_date: date | None = None,
+) -> pd.DataFrame:
+    rows = get_holdings(portfolio_id=portfolio_id, ticker=ticker, snapshot_date=snapshot_date)
+    return pd.DataFrame([{
+        "portfolio_id": r.portfolio_id,
+        "ticker": r.ticker,
+        "weight": r.weight,
+        "quantity": r.quantity,
+        "cost_basis": r.cost_basis,
+        "snapshot_date": r.snapshot_date
+    } for r in rows])

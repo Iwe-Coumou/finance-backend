@@ -1,6 +1,7 @@
 from src.logger import get_logger
 from src.data.database import Portfolio, get_session
 from sqlalchemy import select
+import pandas as pd
 
 _logger = get_logger(__name__)
 
