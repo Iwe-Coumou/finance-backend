@@ -7,4 +7,3 @@ class PortfolioResponse(BaseModel):
     name: str
     source: str
     created_at: datetime | None
-    holdings: list[HoldingResponse]
