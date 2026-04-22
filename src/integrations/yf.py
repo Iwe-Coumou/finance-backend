@@ -88,6 +88,58 @@ def get_ticker_info(ticker: str) -> dict:
         _logger.debug(f"{ticker} is not a valid ticker: {e}")
         raise
     
+def get_ticker_fundamentals(ticker: str) -> dict:
+    _logger.debug(f"Getting fundamentals for {ticker}")
+    try:
+        yf_ticker = yf.Ticker(ticker)
+        with contextlib.redirect_stderr(io.StringIO()):
+            info = yf_ticker.info
+        if not info or len(info) <= 1:
+            raise ValueError(f"No data returned for {ticker}")
+        _logger.debug(f"Fundamentals for {ticker} received")
+        return {
+            "ticker": ticker,
+            "market_cap": info.get("marketCap"),
+            "beta": info.get("beta"),
+            "pe_ratio": info.get("trailingPE"),
+            "eps": info.get("trailingEps"),
+            "dividend_yield": info.get("dividendYield"),
+            "avg_volume": info.get("averageVolume"),
+            "revenue": info.get("totalRevenue"),
+            "net_income": info.get("netIncomeToCommon"),
+            "debt_to_equity": info.get("debtToEquity"),
+            "roe": info.get("returnOnEquity"),
+            "operating_margin": info.get("operatingMargins"),
+        }
+    except Exception as e:
+        _logger.debug(f"{ticker} fundamentals unavailable: {e}")
+        raise
+
+
+def fetch_fundamentals(tickers: list) -> pd.DataFrame | None:
+    _logger.info("Fetching fundamentals from yfinance")
+    success_count = 0
+    failed = []
+    results = {}
+    for ticker in tickers:
+        try:
+            results[ticker] = get_ticker_fundamentals(ticker)
+            success_count += 1
+        except Exception as e:
+            _logger.warning(f"Skipping {ticker}: {e}")
+            failed.append(ticker)
+
+    _logger.info(f"Successfully fetched fundamentals for {success_count} tickers")
+    if failed:
+        _logger.warning(f"Failed tickers: {failed}")
+    if not results:
+        return None
+
+    df = pd.DataFrame(results.values(), index=list(results.keys()))
+    df.index.name = "ticker"
+    return df
+
+
 def fetch_info(tickers: list) -> pd.DataFrame | None:
     _logger.info("Fetching ticker info from yfinance")
 
