@@ -15,5 +15,6 @@ def get_portfolios(name: str | None = None, source: str | None = None) -> list[P
         
     with get_session() as session:
         rows = session.execute(query).scalars().all()
-    _logger.debug(f"Found {len(rows)} portfolios")  
+        session.expunge_all()
+    _logger.debug(f"Found {len(rows)} portfolios")
     return rows

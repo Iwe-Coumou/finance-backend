@@ -33,17 +33,17 @@ app.add_middleware(
 
 class LoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        start = time.time()
+        start = time.perf_counter()
         try:
             response = await call_next(request)
         except Exception as e:
-            duration = time.time() - start
+            duration = time.perf_counter() - start
             _logger.error(f"{request.method} {request.url.path} -> 500 ({duration:.3f}s) | {e}")
             return JSONResponse(
                 status_code=500,
                 content={"detail": "Internal server error"}
             )
-        duration = time.time() - start
+        duration = time.perf_counter() - start
         _logger.info(f"{request.method} {request.url.path} -> {response.status_code} ({duration:.3f}s)")
         return response
     

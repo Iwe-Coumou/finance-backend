@@ -62,7 +62,7 @@ def get_assets(
     
     df = df.set_index("ticker")
     if "asset_type" in df.columns:
-        df["asset_type"] = df["asset_type"].map(lambda x: x.value if x else None)
+        df["asset_type"] = df["asset_type"].map(lambda x: x.value if isinstance(x, AssetType) else None)
     
     _logger.info(f"Fetched {len(df)} assets | tickers={tickers if tickers is not None else "All"} asset_types={asset_types if asset_types is not None else "All"} cols={cols if cols is not None else "All"}")
     return df
@@ -73,19 +73,7 @@ def store_asset_data(df: pd.DataFrame) -> int:
     rows = df.to_dict(orient="records")
     stmt = (insert(Asset)
         .values(rows)
-        .on_conflict_do_update(
-            index_elements=["ticker"],
-            set_={
-                "name": insert(Asset).excluded.name,
-                "currency": insert(Asset).excluded.currency,
-                "exchange": insert(Asset).excluded.exchange,
-                "country": insert(Asset).excluded.country,
-                "sector": insert(Asset).excluded.sector,
-                "industry": insert(Asset).excluded.industry,
-                "isin": insert(Asset).excluded.isin,
-                "updated_at": func.now(),               
-            }
-        )
+        .on_conflict_do_nothing(index_elements=["ticker"])
     )
     with get_session() as session:
         result = session.execute(stmt)
@@ -120,7 +108,7 @@ def update_asset_region(ticker: str, region: str, force: bool = False) -> None:
         if not asset:
             _logger.warning(f"[{ticker}] Asset not found")
             return
-        if str(asset.region) and not force:
+        if asset.region and not force:
             _logger.debug(f"[{ticker}] Region already set to '{asset.region}', skipping")
             return
 

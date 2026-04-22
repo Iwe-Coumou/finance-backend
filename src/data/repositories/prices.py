@@ -70,9 +70,10 @@ def get_prices(
         query = query.where(Prices.date <= end)
     with get_session() as session:
         rows = session.execute(query).scalars().all()
-    _logger.debug(f"Fetched {len(rows)} price rows")
-    return pd.DataFrame([{
-        "ticker": r.ticker, "date": r.date, "close_adjusted": r.close_adjusted,
-        "close_raw": r.close_raw, "open": r.open, "high": r.high,
-        "low": r.low, "volume": r.volume
-    } for r in rows])
+        df = pd.DataFrame([{
+            "ticker": r.ticker, "date": r.date, "close_adjusted": r.close_adjusted,
+            "close_raw": r.close_raw, "open": r.open, "high": r.high,
+            "low": r.low, "volume": r.volume
+        } for r in rows])
+    _logger.info(f"Fetched {len(df)} price rows | tickers={tickers} range={start} to {end}")
+    return df

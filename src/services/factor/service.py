@@ -14,7 +14,7 @@ from src.logger import get_logger
 _logger = get_logger(__name__)
 REDIS_URL = get_env_var("REDIS_URL", _logger)
 
-redis_client = redis.from_url(REDIS_URL)
+redis_client: redis.Redis = redis.Redis.from_url(REDIS_URL)  # type: ignore[type-arg]
 
 CACHE_TTL = {
     "daily": 60*60*24,
@@ -52,7 +52,7 @@ def get_factor_results(
             cached = redis_client.get(cache_key)
             if cached:
                 _logger.info(f"Cache hit for {tickers} | region={region} frequency={frequency}")
-                raw = json.loads(cached)
+                raw = json.loads(cached)  # type: ignore[arg-type]
                 return {ticker: FactorRegressionResult(**data) for ticker, data in raw.items()}
         except Exception as e:
             _logger.warning(f"Redis read failed, falling through to regression: {e}")

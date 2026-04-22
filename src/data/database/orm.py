@@ -1,60 +1,56 @@
+import datetime as dt
 from sqlalchemy import (
     UniqueConstraint,
-    create_engine,
-    Column,
-    Integer,
     String,
-    DateTime,
+    Integer,
     Float,
     Date,
+    DateTime,
     Enum,
     JSON,
     Index,
     ForeignKey,
 )
 from sqlalchemy.sql import func
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from src.config import AssetType
+
 
 class Base(DeclarativeBase):
     pass
 
 
 class Asset(Base):
-    """One row per known ticker. Static metadata"""
-
     __tablename__ = "assets"
 
-    ticker = Column(String, primary_key=True)
-    name = Column(String)
-    asset_type = Column(Enum(AssetType), nullable=False)
-    currency = Column(String(3), default="XXX")
-    exchange = Column(String)
-    country = Column(String)
-    region = Column(String, nullable=True)
-    region_override = Column(String, nullable=True)
-    sector = Column(String)
-    industry = Column(String)
-    isin = Column(String, nullable=True)
-    figi = Column(String, nullable=True)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, onupdate=func.now())
+    ticker: Mapped[str] = mapped_column(String, primary_key=True)
+    name: Mapped[str | None] = mapped_column(String)
+    asset_type: Mapped[AssetType] = mapped_column(Enum(AssetType), nullable=False)
+    currency: Mapped[str | None] = mapped_column(String(3), default="XXX")
+    exchange: Mapped[str | None] = mapped_column(String)
+    country: Mapped[str | None] = mapped_column(String)
+    region: Mapped[str | None] = mapped_column(String, nullable=True)
+    region_override: Mapped[str | None] = mapped_column(String, nullable=True)
+    sector: Mapped[str | None] = mapped_column(String)
+    industry: Mapped[str | None] = mapped_column(String)
+    isin: Mapped[str | None] = mapped_column(String, nullable=True)
+    figi: Mapped[str | None] = mapped_column(String, nullable=True)
+    created_at: Mapped[dt.datetime | None] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[dt.datetime | None] = mapped_column(DateTime, onupdate=func.now())
 
 
 class Prices(Base):
-    """Daily price history. One row per ticker per date"""
-
     __tablename__ = "prices"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    ticker = Column(String, ForeignKey("assets.ticker"), nullable=False)
-    date = Column(Date, nullable=False)
-    close_adjusted = Column(Float)
-    close_raw = Column(Float)
-    open = Column(Float)
-    high = Column(Float)
-    low = Column(Float)
-    volume = Column(Float)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ticker: Mapped[str] = mapped_column(String, ForeignKey("assets.ticker"), nullable=False)
+    date: Mapped[dt.date] = mapped_column(Date, nullable=False)
+    close_adjusted: Mapped[float | None] = mapped_column(Float)
+    close_raw: Mapped[float | None] = mapped_column(Float)
+    open: Mapped[float | None] = mapped_column(Float)
+    high: Mapped[float | None] = mapped_column(Float)
+    low: Mapped[float | None] = mapped_column(Float)
+    volume: Mapped[float | None] = mapped_column(Float)
 
     __table_args__ = (
         UniqueConstraint("ticker", "date", name="uq_price_ticker_data"),
@@ -63,15 +59,13 @@ class Prices(Base):
 
 
 class Returns(Base):
-    """Computed returns. Derived from prices, cached here"""
-
     __tablename__ = "returns"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    ticker = Column(String, ForeignKey("assets.ticker"), nullable=False)
-    date = Column(Date, nullable=False)
-    frequency = Column(String, nullable=False)
-    value = Column(Float, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ticker: Mapped[str] = mapped_column(String, ForeignKey("assets.ticker"), nullable=False)
+    date: Mapped[dt.date] = mapped_column(Date, nullable=False)
+    frequency: Mapped[str] = mapped_column(String, nullable=False)
+    value: Mapped[float] = mapped_column(Float, nullable=False)
 
     __table_args__ = (
         UniqueConstraint("ticker", "date", "frequency", name="uq_return_ticker_date_freq"),
@@ -80,16 +74,14 @@ class Returns(Base):
 
 
 class FactorReturn(Base):
-    """Fama-French factor returns. One row per factor per date"""
-
     __tablename__ = "factor_returns"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    factor = Column(String, nullable=False)  # 'mkt', 'smb', 'hml', 'rmw', 'cma', 'mom', 'rf'
-    date = Column(Date, nullable=False)
-    value = Column(Float)
-    frequency = Column(String, default="daily")  # 'daily' or 'monthly'
-    region = Column(String, nullable=False ,default='us')
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    factor: Mapped[str] = mapped_column(String, nullable=False)
+    date: Mapped[dt.date] = mapped_column(Date, nullable=False)
+    value: Mapped[float | None] = mapped_column(Float)
+    frequency: Mapped[str | None] = mapped_column(String, default="daily")
+    region: Mapped[str | None] = mapped_column(String, nullable=False, default="us")
 
     __table_args__ = (
         UniqueConstraint("factor", "date", "frequency", "region", name="uq_factor_date_freq_region"),
@@ -98,15 +90,13 @@ class FactorReturn(Base):
 
 
 class MacroIndicator(Base):
-    """Macro time series from FRED. One row per series per date."""
-
     __tablename__ = "macro_indicators"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    series_id = Column(String, nullable=False)  # FRED series ID e.g. "T10Y2Y"
-    date = Column(Date, nullable=False)
-    value = Column(Float)
-    description = Column(String)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    series_id: Mapped[str] = mapped_column(String, nullable=False)
+    date: Mapped[dt.date] = mapped_column(Date, nullable=False)
+    value: Mapped[float | None] = mapped_column(Float)
+    description: Mapped[str | None] = mapped_column(String)
 
     __table_args__ = (
         UniqueConstraint("series_id", "date", name="uq_macro_series_date"),
@@ -115,16 +105,14 @@ class MacroIndicator(Base):
 
 
 class EnrichedPosition(Base):
-    """Cached output of the enrichment pipeline per ticker."""
-
     __tablename__ = "enriched_positions"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    ticker = Column(String, ForeignKey("assets.ticker"), nullable=False)
-    snapshot_date = Column(Date, nullable=False)
-    asset_type = Column(Enum(AssetType))
-    geographic_weights = Column(JSON)  # {"US": 0.62, "EU": 0.22, ...}
-    sector_weights = Column(JSON)  # {"Technology": 0.28, ...}
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ticker: Mapped[str] = mapped_column(String, ForeignKey("assets.ticker"), nullable=False)
+    snapshot_date: Mapped[dt.date] = mapped_column(Date, nullable=False)
+    asset_type: Mapped[AssetType | None] = mapped_column(Enum(AssetType))
+    geographic_weights: Mapped[dict | None] = mapped_column(JSON)
+    sector_weights: Mapped[dict | None] = mapped_column(JSON)
 
     __table_args__ = (
         UniqueConstraint("ticker", "snapshot_date", name="uq_enriched_ticker_date"),
@@ -132,68 +120,65 @@ class EnrichedPosition(Base):
 
 
 class RegimeHistory(Base):
-    """Daily regime classification history."""
-
     __tablename__ = "regime_history"
-    date = Column(Date, primary_key=True)
-    regime = Column(Integer, nullable=False)  # raw state index (0-3)
-    label = Column(String)  # e.g. "Bull / Low Vol"
-    confidence = Column(Float)  # probability of assigned state
-    created_at = Column(DateTime, server_default=func.now())
-    
+
+    date: Mapped[dt.date] = mapped_column(Date, primary_key=True)
+    regime: Mapped[int] = mapped_column(Integer, nullable=False)
+    label: Mapped[str | None] = mapped_column(String)
+    confidence: Mapped[float | None] = mapped_column(Float)
+    created_at: Mapped[dt.datetime | None] = mapped_column(DateTime, server_default=func.now())
+
+
 class Fundamentals(Base):
-    """Asset Fundamentals."""
-    
     __tablename__ = "fundamentals"
-    
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    ticker = Column(String, ForeignKey("assets.ticker"), nullable=False)
-    snapshot_date = Column(Date, nullable=False)
-    market_cap = Column(Float)
-    beta = Column(Float)
-    pe_ratio = Column(Float)
-    eps = Column(Float)
-    dividend_yield = Column(Float)
-    avg_volume = Column(Float)
-    revenue = Column(Float)
-    net_income = Column(Float)
-    debt_to_equity = Column(Float)
-    roe = Column(Float)
-    operating_margin = Column(Float)
-    updated_at = Column(DateTime, server_default=func.now())
-    
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ticker: Mapped[str] = mapped_column(String, ForeignKey("assets.ticker"), nullable=False)
+    snapshot_date: Mapped[dt.date] = mapped_column(Date, nullable=False)
+    market_cap: Mapped[float | None] = mapped_column(Float)
+    beta: Mapped[float | None] = mapped_column(Float)
+    pe_ratio: Mapped[float | None] = mapped_column(Float)
+    eps: Mapped[float | None] = mapped_column(Float)
+    dividend_yield: Mapped[float | None] = mapped_column(Float)
+    avg_volume: Mapped[float | None] = mapped_column(Float)
+    revenue: Mapped[float | None] = mapped_column(Float)
+    net_income: Mapped[float | None] = mapped_column(Float)
+    debt_to_equity: Mapped[float | None] = mapped_column(Float)
+    roe: Mapped[float | None] = mapped_column(Float)
+    operating_margin: Mapped[float | None] = mapped_column(Float)
+    updated_at: Mapped[dt.datetime | None] = mapped_column(DateTime, server_default=func.now())
+
     __table_args__ = (
         UniqueConstraint("ticker", "snapshot_date", name="uq_fundamentals_ticker_date"),
         Index("ix_fundamentals_ticker", "ticker"),
     )
-    
+
+
 class Portfolio(Base):
-    """Portfolios"""
-    
     __tablename__ = "portfolios"
-    
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False)
-    source = Column(String, nullable=False)
-    created_at = Column(DateTime, server_default=func.now())
-    
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    source: Mapped[str] = mapped_column(String, nullable=False)
+    created_at: Mapped[dt.datetime | None] = mapped_column(DateTime, server_default=func.now())
+
     __table_args__ = (
         UniqueConstraint("name", name="uq_portfolio_name"),
     )
-    
+
+
 class PortfolioHolding(Base):
-    """Holdings of the portfolios"""
     __tablename__ = "portfolio_holdings"
-    
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    portfolio_id = Column(Integer, ForeignKey("portfolios.id"), nullable=False)
-    ticker = Column(String, ForeignKey("assets.ticker"), nullable=False)
-    weight = Column(Float, nullable=False)
-    quantity = Column(Float, nullable=False)
-    cost_basis = Column(Float, nullable=True)
-    snapshot_date = Column(Date, nullable=False)
-    
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    portfolio_id: Mapped[int] = mapped_column(Integer, ForeignKey("portfolios.id"), nullable=False)
+    ticker: Mapped[str] = mapped_column(String, ForeignKey("assets.ticker"), nullable=False)
+    weight: Mapped[float] = mapped_column(Float, nullable=False)
+    quantity: Mapped[float] = mapped_column(Float, nullable=False)
+    cost_basis: Mapped[float | None] = mapped_column(Float, nullable=True)
+    snapshot_date: Mapped[dt.date] = mapped_column(Date, nullable=False)
+
     __table_args__ = (
         UniqueConstraint("portfolio_id", "ticker", "snapshot_date", name="uq_holding_portfolio_ticker_date"),
-        Index("ix_holding_portfolio_date", "portfolio_id", "snapshot_date")
+        Index("ix_holding_portfolio_date", "portfolio_id", "snapshot_date"),
     )

@@ -57,5 +57,5 @@ def get_returns(tickers: list[str], frequency: str, start: date, end: date) -> p
             .where(Returns.date <= end)
         ).all()
     df = pd.DataFrame(rows, columns=["ticker", "date", "value"])
-    _logger.debug(f"Fetched {len(df)} return rows")
+    _logger.info(f"Fetched {len(df)} return rows | tickers={tickers} frequency={frequency} range={start} to {end}")
     return df

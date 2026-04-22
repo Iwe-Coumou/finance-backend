@@ -53,5 +53,5 @@ def get_factor_returns(region: str, frequency: str, start: date, end: date) -> p
             .where(FactorReturn.date <= end)
         ).all()
     df = pd.DataFrame(rows, columns=["date", "factor", "value"])
-    _logger.debug(f"Fetched {len(df)} factor returns")
+    _logger.info(f"Fetched {len(df)} factor returns | region={region} frequency={frequency} range={start} to {end}")
     return df
