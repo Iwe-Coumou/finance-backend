@@ -178,7 +178,7 @@ class Portfolio(Base):
     created_at = Column(DateTime, server_default=func.now())
     
     __table_args__ = (
-        UniqueConstraint("name", "source", name="uq_portfolio_name_source"),
+        UniqueConstraint("name", name="uq_portfolio_name"),
     )
     
 class PortfolioHolding(Base):

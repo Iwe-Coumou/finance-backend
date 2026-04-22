@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request, Depends
 from fastapi.responses import JSONResponse
-from src.api.routers import assets, factors, portfolio, screening
+from src.api.routers import assets, factors, portfolio, screening, holdings
 from src.api.dependencies import verify_api_key
 from fastapi.middleware.cors import CORSMiddleware
 from src.logger import get_logger
@@ -19,8 +19,9 @@ app = FastAPI(
 
 app.include_router(assets.router, prefix="/v1/assets", tags=["assets"], dependencies=[Depends(verify_api_key)])
 app.include_router(factors.router, prefix="/v1/factors", tags=["factors"], dependencies=[Depends(verify_api_key)])
-app.include_router(portfolio.router, prefix="/v1/portfolio", tags=["portfolio"], dependencies=[Depends(verify_api_key)])
+app.include_router(portfolio.router, prefix="/v1/portfolios", tags=["portfolios"], dependencies=[Depends(verify_api_key)])
 app.include_router(screening.router, prefix="/v1/screening", tags=["screening"], dependencies=[Depends(verify_api_key)])
+app.include_router(holdings.router, prefix="/v1/holdings", tags=["holdings"], dependencies=[Depends(verify_api_key)])
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[

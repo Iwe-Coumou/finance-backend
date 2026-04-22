@@ -4,7 +4,7 @@ from sqlalchemy import select
 
 _logger = get_logger(__name__)
 
-def get_portfolios(name: str | None = None, source: str | None = None) -> list[dict]:
+def get_portfolios(name: str | None = None, source: str | None = None) -> list[Portfolio]:
     _logger.debug(f"Fetching portfolios | name={name} source={source}")
     query = select(Portfolio)
     if name:
@@ -13,6 +13,6 @@ def get_portfolios(name: str | None = None, source: str | None = None) -> list[d
         query = query.where(Portfolio.source == source)
         
     with get_session() as session:
-        rows = session.execute(query).scalar().all()
+        rows = session.execute(query).scalars().all()
     _logger.debug(f"Found {len(rows)} portfolios")  
     return rows
