@@ -4,7 +4,7 @@ from src.api.schemas import AssetResponse
 
 router = APIRouter()
 
-@router.get("/")
+@router.get("/", response_model=list[AssetResponse])
 def list_assets():
     return get_assets().to_dict(orient="records")
 
