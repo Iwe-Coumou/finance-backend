@@ -1,6 +1,6 @@
 from src.data.repositories import get_holdings_df, get_prices, get_assets
 from src.integrations.fmp import get_rate, FMPClient
-from src.logger import get_logger
+from src.logging.logger import get_logger
 import pandas as pd
 from datetime import date
 

@@ -1,4 +1,4 @@
-from src.logger import get_logger
+from src.logging.logger import get_logger
 from src.data.config import YF_TO_OPENFIGI_EXCHANGE
 from src.integrations.openfigi import OpenFIGIClient
 import pandas as pd

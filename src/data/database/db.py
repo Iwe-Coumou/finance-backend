@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from src.config import get_env_var
-from src.logger import get_logger
+from src.logging.logger import get_logger
 from src.data.database.orm import Base
 from contextlib import contextmanager
 

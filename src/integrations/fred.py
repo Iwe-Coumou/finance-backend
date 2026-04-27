@@ -1,4 +1,4 @@
-from src.logger import get_logger
+from src.logging.logger import get_logger
 from fredapi import Fred
 from datetime import date
 import pandas as pd

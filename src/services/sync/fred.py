@@ -1,7 +1,7 @@
 from datetime import date
 from fredapi import Fred
 from src.config import get_env_var
-from src.logger import get_logger
+from src.logging.logger import get_logger
 from src.integrations.fred import SERIES, fetch_series
 from src.data.repositories import store_macro_data
 

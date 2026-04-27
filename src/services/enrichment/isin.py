@@ -1,6 +1,6 @@
 from src.integrations.fmp import FMPClient, get_profile
 from src.data.repositories import get_assets, update_isins
-from src.logger import get_logger
+from src.logging.logger import get_logger
 
 _logger = get_logger(__name__)
 

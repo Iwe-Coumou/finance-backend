@@ -1,4 +1,4 @@
-from src.logger import get_logger
+from src.logging.logger import get_logger
 import pandas as pd
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert

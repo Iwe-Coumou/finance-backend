@@ -1,5 +1,5 @@
 from src.data.database import get_session, Returns
-from src.logger import get_logger
+from src.logging.logger import get_logger
 from datetime import date
 import pandas as pd
 from sqlalchemy import select

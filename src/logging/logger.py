@@ -62,6 +62,10 @@ def _configure_root():
     services.addFilter(_NameFilter("src.services"))
     services.setFormatter(formatter)
     
+    errors = logging.FileHandler("logs/errors.log", mode='w')
+    errors.setLevel(logging.ERROR)
+    errors.setFormatter(formatter)
+    
     root.addHandler(stdout)
     root.addHandler(debug)
     root.addHandler(db)
@@ -69,6 +73,7 @@ def _configure_root():
     root.addHandler(integrations)
     root.addHandler(models)
     root.addHandler(services)
+    root.addHandler(errors)
 
     logging.getLogger("yfinance").setLevel(logging.WARNING)
     logging.getLogger("peewee").setLevel(logging.WARNING)

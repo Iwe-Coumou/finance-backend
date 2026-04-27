@@ -1,4 +1,4 @@
-from src.logger import get_logger
+from src.logging.logger import get_logger
 from datetime import date
 from src.integrations.yf import fetch_prices, fetch_info, fetch_fundamentals
 from src.data.repositories import store_all_returns, store_asset_data, store_all_prices, store_fundamentals

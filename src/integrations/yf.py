@@ -1,5 +1,5 @@
 import yfinance as yf
-from src.logger import get_logger
+from src.logging.logger import get_logger
 import pandas as pd
 from datetime import date, timedelta
 import contextlib

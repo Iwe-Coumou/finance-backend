@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import statsmodels.api as sm
 from dataclasses import dataclass
-from src.logger import get_logger
+from src.logging.logger import get_logger
 
 _logger = get_logger(__name__)
 

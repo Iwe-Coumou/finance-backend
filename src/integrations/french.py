@@ -3,7 +3,7 @@ import requests
 import zipfile
 import io
 from datetime import date
-from src.logger import get_logger
+from src.logging.logger import get_logger
 
 _logger = get_logger(__name__)
 

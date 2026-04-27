@@ -1,5 +1,5 @@
 from src.services.enrichment import region, figi, isin
-from src.logger import get_logger
+from src.logging import get_logger, print_log_summary
 
 _logger = get_logger(__name__)
 
@@ -19,3 +19,4 @@ if __name__ == "__main__":
     import sys
     force = "--force" in sys.argv
     enrich_all(force=force)
+    print_log_summary()

@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from src.api.routers import assets, factors, portfolio, screening, holdings
 from src.api.dependencies import verify_api_key
 from fastapi.middleware.cors import CORSMiddleware
-from src.logger import get_logger
+from src.logging.logger import get_logger
 import time
 from starlette.middleware.base import BaseHTTPMiddleware
 import logging

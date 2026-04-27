@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 from src.integrations.french import DATASETS, fetch_factors
 from src.data.repositories import get_last_stored_factor_data, store_factors
-from src.logger import get_logger
+from src.logging.logger import get_logger
 import pandas as pd
 
 _logger = get_logger(__name__)

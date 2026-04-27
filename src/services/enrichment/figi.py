@@ -1,6 +1,6 @@
 from src.data.repositories import get_assets, update_figis
 from src.integrations.openfigi import OpenFIGIClient, get_figi_batch
-from src.logger import get_logger
+from src.logging.logger import get_logger
 import time
 
 _logger = get_logger(__name__)

@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 import os
 from enum import Enum
-from src.logger import get_logger
+from src.logging.logger import get_logger
 
 
 def get_env_var(var: str, logger=None) -> str:

@@ -1,5 +1,5 @@
 from src.data.repositories import get_assets, update_asset_region
-from src.logger import get_logger
+from src.logging.logger import get_logger
 from src.data.config import COUNTRY_TO_REGION
 import pandas as pd
 

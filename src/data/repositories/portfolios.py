@@ -1,4 +1,4 @@
-from src.logger import get_logger
+from src.logging.logger import get_logger
 from src.data.database import Portfolio, get_session
 from sqlalchemy import select
 import pandas as pd

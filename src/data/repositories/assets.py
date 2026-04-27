@@ -1,7 +1,7 @@
 import pandas as pd
 from sqlalchemy import select
 from src.data.database import Asset, get_session
-from src.logger import get_logger
+from src.logging.logger import get_logger
 from src.config import AssetType
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.sql import func, update

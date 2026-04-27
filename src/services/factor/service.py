@@ -9,7 +9,7 @@ import redis
 from src.services.factor.data_alignment import load_aligned_data
 from src.models.factor import run_regressions, FactorRegressionResult
 from src.config import get_env_var
-from src.logger import get_logger
+from src.logging.logger import get_logger
 
 _logger = get_logger(__name__)
 REDIS_URL = get_env_var("REDIS_URL", _logger)

@@ -1,6 +1,6 @@
 from src.integrations.base import HTTPClient
 from src.config import get_env_var
-from src.logger import get_logger
+from src.logging.logger import get_logger
 
 _logger = get_logger(__name__)
 

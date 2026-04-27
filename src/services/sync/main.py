@@ -1,7 +1,7 @@
 from src.services.sync import yf, french, fred
 from src.services.enrichment import enrich_all
 from datetime import date
-from src.logger import get_logger
+from src.logging import get_logger, print_log_summary
 
 _logger = get_logger(__name__)
 
@@ -25,3 +25,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    print_log_summary()    

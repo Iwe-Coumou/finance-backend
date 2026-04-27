@@ -1,7 +1,7 @@
 import pandas as pd
 from sqlalchemy.dialects.postgresql import insert
 from src.data.database import Fundamentals, get_session
-from src.logger import get_logger
+from src.logging.logger import get_logger
 from datetime import date
 
 _logger = get_logger(__name__)

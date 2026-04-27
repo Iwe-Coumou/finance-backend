@@ -1,7 +1,7 @@
 import pandas as pd
 from datetime import date, timedelta
 from src.data.repositories import get_returns, get_factor_returns
-from src.logger import get_logger
+from src.logging.logger import get_logger
 
 _logger = get_logger(__name__)
 
