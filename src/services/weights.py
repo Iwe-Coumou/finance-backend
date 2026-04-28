@@ -5,15 +5,16 @@ import pandas as pd
 
 _logger = get_logger(__name__)
 
-def portfolio_weights(portfolio_id: int | None=None, portfolio_name: str | None=None) -> dict[str, float]:
+def portfolio_weights(portfolio_id: int | None=None, portfolio_name: str | None=None) -> dict[str, float] | None:
     if not portfolio_id and not portfolio_name:
         _logger.error(f"Need either portfolio id or portfolio name to get weights")
-    
+        return None
 
     if portfolio_name:
         portfolio = get_portfolio(name=portfolio_name)
         if portfolio is None:
             _logger.error(f"No portfolio found | name={portfolio_name}")
+            return None
         
         portfolio_id = portfolio.id
     

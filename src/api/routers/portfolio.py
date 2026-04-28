@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from src.data.repositories import get_portfolios
-from src.api.schemas import PortfolioResponse
+from src.services.weights import portfolio_weights
+from src.api.schemas import PortfolioResponse, PortfolioWeightsResponse
 
 router = APIRouter()
 
@@ -17,3 +18,10 @@ def get_portfolio(name: str):
     if not portfolio:
         raise HTTPException(status_code=404, detail="No portfolio found")
     return portfolio[0]
+
+@router.get("/weights/{name}", response_model=PortfolioWeightsResponse)
+def get_portfolio_weights(name: str):
+    weights = portfolio_weights(name=name)
+    if not weights:
+        raise HTTPException(status_code=404, detail="No portfolio found")
+    return PortfolioWeightsResponse(weights=weights)

@@ -1,5 +1,5 @@
 from src.api.schemas.assets import AssetResponse
 from src.api.schemas.holdings import HoldingResponse
-from src.api.schemas.portfolios import PortfolioResponse
+from src.api.schemas.portfolios import PortfolioResponse, PortfolioWeightsResponse
 
-__all__ = ["AssetRespons", "PortfolioResponse", "HoldingResponse"]
+__all__ = ["AssetRespons", "PortfolioResponse", "HoldingResponse", "PortfolioWeightsResponse"]
