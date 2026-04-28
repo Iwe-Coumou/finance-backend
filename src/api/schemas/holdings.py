@@ -1,9 +1,8 @@
 from pydantic import BaseModel
-from datetime import date
+from datetime import datetime
 
 class HoldingResponse(BaseModel):
     ticker: str
-    weight: float
     quantity: float
     cost_basis: float | None
-    snapshot_date: date
+    snapshot_date: datetime

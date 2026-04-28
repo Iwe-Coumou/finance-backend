@@ -2,7 +2,7 @@ from src.data.repositories import get_holdings_df, get_prices, get_assets
 from src.integrations.fmp import get_rate, FMPClient
 from src.logging.logger import get_logger
 import pandas as pd
-from datetime import date
+from datetime import date, datetime
 
 _logger = get_logger(__spec__.name if __spec__ else __name__)
 _client = FMPClient()
@@ -51,10 +51,11 @@ def _convert_to_eur(series: pd.Series, currencies: pd.Series, conversion_map: di
 def get_holdings_eur(
     portfolio_id: int | None = None,
     ticker: str | None = None,
-    snapshot_date: date | None = None,
+    snapshot_date: datetime | None = None,
+    all_snapshots: bool = False,
 ) -> pd.DataFrame:
     _logger.info(f"Converting holdings to EUR | portfolio_id={portfolio_id} ticker={ticker}")
-    holdings = get_holdings_df(portfolio_id=portfolio_id, ticker=ticker, snapshot_date=snapshot_date)
+    holdings = get_holdings_df(portfolio_id=portfolio_id, ticker=ticker, snapshot_date=snapshot_date, all_snapshots=all_snapshots)
     currencies = get_assets(tickers=holdings["ticker"].unique().tolist(), cols='currency')
     ticker_currencies = holdings["ticker"].map(currencies["currency"])
 
@@ -62,6 +63,25 @@ def get_holdings_eur(
     holdings["cost_basis"] = _convert_to_eur(holdings["cost_basis"], ticker_currencies, c_map)
     _logger.info(f"Converted {len(holdings)} holdings to EUR")
     return holdings
+
+def get_holding_eur(
+    portfolio_id: int,
+    ticker: str,
+    snapshot_date: datetime | None = None,
+    all_snapshots: bool = False,
+) -> pd.DataFrame:
+    _logger.info(f"Converting holding to EUR | portfolio_id={portfolio_id} ticker={ticker}")
+    holding = get_holdings_df(portfolio_id=portfolio_id, ticker=ticker, snapshot_date=snapshot_date, all_snapshots=all_snapshots)
+    if holding.empty:
+        _logger.warning(f"Holding not found | portfolio_id={portfolio_id} ticker={ticker}")
+        return holding
+    currencies = get_assets(tickers=[ticker], cols='currency')
+    ticker_currencies = holding["ticker"].map(currencies["currency"])
+
+    c_map = _conversion_map(_get_symbols(currencies["currency"].tolist()))
+    holding["cost_basis"] = _convert_to_eur(holding["cost_basis"], ticker_currencies, c_map)
+    _logger.info(f"Converted holding to EUR | portfolio_id={portfolio_id} ticker={ticker}")
+    return holding
 
 
 def get_prices_eur(
@@ -85,8 +105,6 @@ def get_prices_eur(
 
 
 if __name__ == "__main__":
-    from datetime import date
-
     tickers = ["AAPL", "INFY.NS"]
     start = date(2024, 1, 1)
     end = date(2024, 1, 10)

@@ -4,8 +4,8 @@ from src.data.repositories.returns import store_return_data, store_all_returns, 
 from src.data.repositories.factors import get_last_stored_factor_data, store_factors, get_factor_returns
 from src.data.repositories.macro import store_macro_data
 from src.data.repositories.fundamentals import store_fundamentals
-from src.data.repositories.portfolios import get_portfolios
-from src.data.repositories.holdings import get_holdings, get_holdings_df
+from src.data.repositories.portfolios import get_portfolios, get_portfolio, write_portfolio
+from src.data.repositories.holdings import get_holdings, get_holdings_df, get_holding, write_holding
 
 __all__ = [
     "get_assets", "store_asset_data", "update_figis", "update_asset_region", "update_isins",
@@ -14,6 +14,6 @@ __all__ = [
     "get_last_stored_factor_data", "store_factors", "get_factor_returns",
     "store_macro_data",
     "store_fundamentals",
-    "get_portfolios",
-    "get_holdings", "get_holdings_df"
+    "get_portfolios", "get_portfolio", "write_portfolio",
+    "get_holdings", "get_holdings_df", "get_holding", "write_holding"
 ]

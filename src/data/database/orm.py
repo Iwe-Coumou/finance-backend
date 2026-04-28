@@ -173,10 +173,9 @@ class PortfolioHolding(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     portfolio_id: Mapped[int] = mapped_column(Integer, ForeignKey("portfolios.id"), nullable=False)
     ticker: Mapped[str] = mapped_column(String, ForeignKey("assets.ticker"), nullable=False)
-    weight: Mapped[float] = mapped_column(Float, nullable=False)
     quantity: Mapped[float] = mapped_column(Float, nullable=False)
     cost_basis: Mapped[float | None] = mapped_column(Float, nullable=True)
-    snapshot_date: Mapped[dt.date] = mapped_column(Date, nullable=False)
+    snapshot_date: Mapped[dt.datetime] = mapped_column(DateTime, nullable=False)
 
     __table_args__ = (
         UniqueConstraint("portfolio_id", "ticker", "snapshot_date", name="uq_holding_portfolio_ticker_date"),
