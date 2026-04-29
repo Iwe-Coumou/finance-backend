@@ -163,7 +163,7 @@ class Portfolio(Base):
     created_at: Mapped[dt.datetime | None] = mapped_column(DateTime, server_default=func.now())
 
     __table_args__ = (
-        UniqueConstraint("name", name="uq_portfolio_name"),
+        UniqueConstraint("name", "source", name="uq_portfolio_name_source"),
     )
 
 

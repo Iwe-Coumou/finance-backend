@@ -13,21 +13,23 @@ def valid_float(value: str) -> float:
 def get_args() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument("name", help="The name of the portfolio this holding belongs to")
+    parser.add_argument("source", help="The source of the portfolio (e.g., DEGIRO)")
     parser.add_argument("ticker", help="Ticker of the holding")
     parser.add_argument("quantity", help="The quantity to add", type=valid_float)
     parser.add_argument("price", help="Price the holding was bought at", type=valid_float)
-    
+
     return parser.parse_args()
 
 def add_holding():
     args = get_args()
-    
-    name = args.name 
+
+    name = args.name
+    source = args.source
     ticker = args.ticker
     quantity = args.quantity
     price = args.price
-    
-    portfolio = get_portfolio(name=name)
+
+    portfolio = get_portfolio(name=name, source=source)
     holding_df = get_holdings_df(portfolio_id=portfolio.id, ticker=ticker)
     if holding_df.empty:
         new_quantity = quantity

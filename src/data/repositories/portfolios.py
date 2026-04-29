@@ -20,28 +20,31 @@ def get_portfolios(name: str | None = None, source: str | None = None) -> list[P
     _logger.debug(f"Found {len(rows)} portfolios")
     return rows
 
-def get_portfolio(name: str | None = None) -> Portfolio | None:
-    _logger.debug(f"Fetching portfolio | name={name}")
+def get_portfolio(name: str | None = None, source: str | None = None) -> Portfolio | None:
+    _logger.debug(f"Fetching portfolio | name={name} source={source}")
     query = select(Portfolio)
     if name:
         query = query.where(Portfolio.name == name)
-        
+    if source:
+        query = query.where(Portfolio.source == source)
+
     with get_session() as session:
         row = session.execute(query).scalar_one_or_none()
-        session.expunge(row)
-        
+        if row is not None:
+            session.expunge(row)
+
     if row is not None:
-        _logger.debug(f"Found portfolio | name={name}")
+        _logger.debug(f"Found portfolio | name={name} source={source}")
     else:
-        _logger.warning(f"Portfolio not found | name={name}")
-        
+        _logger.warning(f"Portfolio not found | name={name} source={source}")
+
     return row
 
 def write_portfolio(name: str, source: str):
     _logger.debug(f"Creating porftolio | name={name} source={source}")
     stmt = (insert(Portfolio)
             .values(name=name, source=source)
-            .on_conflict_do_nothing()
+            .on_conflict_do_nothing(constraint="uq_portfolio_name_source")
     )
     
     with get_session() as session:
