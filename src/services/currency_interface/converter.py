@@ -56,6 +56,9 @@ def get_holdings_eur(
 ) -> pd.DataFrame:
     _logger.info(f"Converting holdings to EUR | portfolio_id={portfolio_id} ticker={ticker}")
     holdings = get_holdings_df(portfolio_id=portfolio_id, ticker=ticker, snapshot_date=snapshot_date, all_snapshots=all_snapshots)
+    if holdings.empty:
+        _logger.warning(f"No holdings found to convert | portfolio_id={portfolio_id} ticker={ticker}")
+        return holdings
     currencies = get_assets(tickers=holdings["ticker"].unique().tolist(), cols='currency')
     ticker_currencies = holdings["ticker"].map(currencies["currency"])
 

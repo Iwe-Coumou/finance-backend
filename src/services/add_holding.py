@@ -30,6 +30,9 @@ def add_holding():
     price = args.price
 
     portfolio = get_portfolio(name=name, source=source)
+    if portfolio is None:
+        _logger.error(f"Portfolio not found | name={name} source={source}")
+        return
     holding_df = get_holdings_df(portfolio_id=portfolio.id, ticker=ticker)
     if holding_df.empty:
         new_quantity = quantity

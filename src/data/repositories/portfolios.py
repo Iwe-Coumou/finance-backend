@@ -41,7 +41,7 @@ def get_portfolio(name: str | None = None, source: str | None = None) -> Portfol
     return row
 
 def write_portfolio(name: str, source: str):
-    _logger.debug(f"Creating porftolio | name={name} source={source}")
+    _logger.debug(f"Creating portfolio | name={name} source={source}")
     stmt = (insert(Portfolio)
             .values(name=name, source=source)
             .on_conflict_do_nothing(constraint="uq_portfolio_name_source")

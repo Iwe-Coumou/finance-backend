@@ -38,20 +38,23 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
         except Exception as e:
             duration = time.perf_counter() - start
-            _logger.error(f"{request.method} {request.url.path} -> 500 ({duration:.3f}s) | {e}")
+            _logger.error(f"{request.method} {request.url.path} -> 500 ({duration:.3f}s) | {e}", exc_info=True)
             return JSONResponse(
                 status_code=500,
                 content={"detail": "Internal server error"}
             )
         duration = time.perf_counter() - start
-        _logger.info(f"{request.method} {request.url.path} -> {response.status_code} ({duration:.3f}s)")
+        path = request.url.path + (f"?{request.url.query}" if request.url.query else "")
+        status_label = {200: "OK", 201: "Created", 400: "Bad Request", 401: "Unauthorized", 403: "Forbidden", 404: "Not Found", 422: "Unprocessable", 500: "Server Error"}.get(response.status_code, "")
+        label = f" ({status_label})" if status_label else ""
+        _logger.info(f"{request.method} {path} -> {response.status_code}{label} ({duration:.3f}s)")
         return response
     
 app.add_middleware(LoggingMiddleware)
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    _logger.error(f"Unhandled error on {request.url.path}: {exc}")
+    _logger.error(f"Unhandled error on {request.url.path}: {exc}", exc_info=True)
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal server error"}
@@ -59,6 +62,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 @app.exception_handler(ValueError)
 async def value_error_handler(request: Request, exc: ValueError):
+    _logger.warning(f"ValueError on {request.url.path}: {exc}")
     return JSONResponse(
         status_code=400,
         content={"detail": str(exc)}

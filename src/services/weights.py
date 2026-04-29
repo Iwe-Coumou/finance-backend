@@ -10,13 +10,14 @@ def portfolio_weights(name: str | None = None, source: str | None = None) -> dic
         portfolios = get_portfolios(name=name, source=source)
         if not portfolios:
             _logger.error(f"No portfolios found | name={name} source={source}")
-            return None
+            raise LookupError(f"No portfolio found | name={name} source={source}")
         frames = [get_holdings_eur(portfolio_id=p.id) for p in portfolios]
         holdings = pd.concat(frames, ignore_index=True)
     else:
         holdings = get_holdings_eur()
 
     if holdings.empty:
+        _logger.warning(f"No holdings available to compute weights | name={name} source={source}")
         return None
     holdings['value'] = holdings['quantity'] * holdings['cost_basis']
     total = holdings['value'].sum()
