@@ -36,7 +36,7 @@ def get_holdings(
     return rows
 
 def get_holdings_df(
-    portfolio_id: int | None = None,
+    portfolio_id: int | list[int] | None = None,
     ticker: str | None = None,
     snapshot_date: datetime | None = None,
     all_snapshots: bool = False,
@@ -44,7 +44,10 @@ def get_holdings_df(
     with get_session() as session:
         query = select(PortfolioHolding)
         if portfolio_id is not None:
-            query = query.where(PortfolioHolding.portfolio_id == portfolio_id)
+            if isinstance(portfolio_id, list):
+                query = query.where(PortfolioHolding.portfolio_id.in_(portfolio_id))
+            else:
+                query = query.where(PortfolioHolding.portfolio_id == portfolio_id)
         if ticker is not None:
             query = query.where(PortfolioHolding.ticker == ticker)
         if not all_snapshots:
@@ -105,6 +108,7 @@ def write_holding(
     ticker: str,
     quantity: float,
     cost_basis: float,
+    snapshot_date: datetime | None = None,
 ):
     _logger.debug(f"Inserting holding to portfolio {portfolio_id} for {ticker}")
     stmt = (insert(PortfolioHolding)
@@ -113,7 +117,7 @@ def write_holding(
                 ticker=ticker,
                 quantity=float(quantity),
                 cost_basis=float(cost_basis),
-                snapshot_date=datetime.now()
+                snapshot_date=snapshot_date or datetime.now()
             )
             .on_conflict_do_nothing()
     )

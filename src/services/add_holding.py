@@ -1,4 +1,5 @@
 import argparse
+from datetime import datetime
 from src.data.repositories import get_portfolio, get_holdings_df, write_holding
 from src.logging import get_logger
 
@@ -17,6 +18,7 @@ def get_args() -> argparse.ArgumentParser:
     parser.add_argument("ticker", help="Ticker of the holding")
     parser.add_argument("quantity", help="The quantity to add", type=valid_float)
     parser.add_argument("price", help="Price the holding was bought at", type=valid_float)
+    parser.add_argument("--date", help="Transaction date (YYYY-MM-DD HH:MM:SS), defaults to now", type=lambda s: datetime.strptime(s, "%Y-%m-%d %H:%M:%S"), default=None)
 
     return parser.parse_args()
 
@@ -43,7 +45,7 @@ def add_holding():
         new_cost_basis = round(((holding.quantity*holding.cost_basis)+(quantity*price)) / new_quantity, 2)
         
     _logger.info(f"adding holding | new_quantity={new_quantity} new_cost_basis={new_cost_basis}")
-    write_holding(portfolio_id=portfolio.id, ticker=ticker, quantity=new_quantity, cost_basis=new_cost_basis)
+    write_holding(portfolio_id=portfolio.id, ticker=ticker, quantity=new_quantity, cost_basis=new_cost_basis, snapshot_date=args.date)
 
 if __name__ == "__main__":
     add_holding()

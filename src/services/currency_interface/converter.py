@@ -49,7 +49,7 @@ def _convert_to_eur(series: pd.Series, currencies: pd.Series, conversion_map: di
     return series * currencies.map(conversion_map)
 
 def get_holdings_eur(
-    portfolio_id: int | None = None,
+    portfolio_id: int | list[int] | None = None,
     ticker: str | None = None,
     snapshot_date: datetime | None = None,
     all_snapshots: bool = False,

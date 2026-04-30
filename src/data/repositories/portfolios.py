@@ -6,13 +6,13 @@ import pandas as pd
 
 _logger = get_logger(__name__)
 
-def get_portfolios(name: str | None = None, source: str | None = None) -> list[Portfolio]:
+def get_portfolios(name: list[str] | None = None, source: list[str] | None = None) -> list[Portfolio]:
     _logger.debug(f"Fetching portfolios | name={name} source={source}")
     query = select(Portfolio)
     if name:
-        query = query.where(Portfolio.name == name)
+        query = query.where(Portfolio.name.in_(name))
     if source:
-        query = query.where(Portfolio.source == source)
+        query = query.where(Portfolio.source.in_(source))
         
     with get_session() as session:
         rows = session.execute(query).scalars().all()

@@ -1,4 +1,4 @@
-TEST_TICKERS = ["AAPL", "KO", "MSFT", "ASML.AS", "MC.PA", "SAP.DE", "SHEL.L", "7203.T", "0700.HK", "INFY.NS"]
+TEST_TICKERS = ["AAPL", "KO", "MSFT", "ASML.AS", "MC.PA", "SAP.DE", "SHEL.L", "7203.T", "0700.HK", "INFY.NS", "SPY", "SYBC.DE", "SYBA.DE", "IS3N.DE", "SC0C.DE", "IDVA.AS", "VUAA.DE"]
 
 COUNTRY_TO_REGION = {
     # North America

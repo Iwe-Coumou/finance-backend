@@ -5,19 +5,19 @@ import pandas as pd
 
 _logger = get_logger(__name__)
 
-def portfolio_weights(name: str | None = None, source: str | None = None) -> dict[str, float] | None:
-    if name or source:
-        portfolios = get_portfolios(name=name, source=source)
+def portfolio_weights(names: list[str] | None = None, sources: list[str] | None = None) -> dict[str, float] | None:
+    if names or sources:
+        portfolios = get_portfolios(name=names, source=sources)
         if not portfolios:
-            _logger.error(f"No portfolios found | name={name} source={source}")
-            raise LookupError(f"No portfolio found | name={name} source={source}")
+            _logger.error(f"No portfolios found | names={names} sources={sources}")
+            raise LookupError(f"No portfolio found | names={names} sources={sources}")
         frames = [get_holdings_eur(portfolio_id=p.id) for p in portfolios]
         holdings = pd.concat(frames, ignore_index=True)
     else:
         holdings = get_holdings_eur()
 
     if holdings.empty:
-        _logger.warning(f"No holdings available to compute weights | name={name} source={source}")
+        _logger.warning(f"No holdings available to compute weights | names={names} sources={sources}")
         return None
     holdings['value'] = holdings['quantity'] * holdings['cost_basis']
     total = holdings['value'].sum()

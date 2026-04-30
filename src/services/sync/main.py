@@ -16,6 +16,9 @@ def fetch_all(tickers: list, start: date = date(2000, 1, 1), end=None):
 
     _logger.info("Fetching complete.")
 
+def fetch_and_enrich(tickers: list[str]):
+    fetch_all(tickers)
+    enrich_all(True)
 
 def main():
     from src.data.config import TEST_TICKERS
