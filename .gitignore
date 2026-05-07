@@ -29,3 +29,6 @@ Thumbs.db
 
 *.sh
 *.bat
+
+# runtime state
+state.json
