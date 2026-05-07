@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request, Depends
 from fastapi.responses import JSONResponse
-from src.api.routers import assets, factors, portfolio, screening, holdings
+from src.api.routers import assets, factors, portfolio, screening, holdings, misc, health
 from src.api.dependencies import verify_api_key
 from fastapi.middleware.cors import CORSMiddleware
 from src.logging.logger import get_logger
@@ -22,6 +22,8 @@ app.include_router(factors.router, prefix="/v1/factors", tags=["factors"], depen
 app.include_router(portfolio.router, prefix="/v1/portfolios", tags=["portfolios"], dependencies=[Depends(verify_api_key)])
 app.include_router(screening.router, prefix="/v1/screening", tags=["screening"], dependencies=[Depends(verify_api_key)])
 app.include_router(holdings.router, prefix="/v1/holdings", tags=["holdings"], dependencies=[Depends(verify_api_key)])
+app.include_router(misc.router, prefix="/v1", tags=["miscalaneaus"], dependencies=[Depends(verify_api_key)])
+app.include_router(health.router, tags=["health"])
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -38,7 +40,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
         except Exception as e:
             duration = time.perf_counter() - start
-            _logger.error(f"{request.method} {request.url.path} -> 500 ({duration:.3f}s) | {e}", exc_info=True)
+            _logger.error(f"{request.method} {request.url.path} -> 500 ({duration:.3f}s) | {str(e).splitlines()[0]}")
             return JSONResponse(
                 status_code=500,
                 content={"detail": "Internal server error"}
@@ -54,7 +56,7 @@ app.add_middleware(LoggingMiddleware)
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    _logger.error(f"Unhandled error on {request.url.path}: {exc}", exc_info=True)
+    _logger.error(f"Unhandled error on {request.url.path}: {exc}")
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal server error"}
@@ -67,10 +69,6 @@ async def value_error_handler(request: Request, exc: ValueError):
         status_code=400,
         content={"detail": str(exc)}
     )
-
-@app.get("/health")
-def health() -> dict:
-    return {"status": "ok"}
 
 @app.get("/test/error")
 def test_error():

@@ -1,0 +1,1 @@
+from src.services.sync.main import fetch_and_enrich

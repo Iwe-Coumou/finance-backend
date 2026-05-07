@@ -16,7 +16,7 @@ def get_engine():
         return _engine
     try:
         _engine = create_engine(get_env_var("DB_URL"))
-        logger.info("Connected to database")
+        logger.info("Database engine created")
         return _engine
     except Exception as e:
         logger.error(f"Failed to connect to database: {e}")
@@ -35,7 +35,7 @@ def get_session():
         logger.debug("Session committed")
     except Exception as e:
         session.rollback()
-        logger.warning(f"Session rolled back: {e}")
+        logger.warning(f"Session rolled back: {str(e).splitlines()[0]}")
         raise
     finally:
         session.close()

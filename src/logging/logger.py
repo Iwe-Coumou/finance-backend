@@ -3,7 +3,7 @@ import logging
 import sys
 import os
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 LOG_DIR = os.path.join(BASE_DIR, "logs")
 os.makedirs(LOG_DIR, exist_ok=True)
 
@@ -33,36 +33,36 @@ def _configure_root():
     stdout.setLevel(logging.INFO)
     stdout.setFormatter(formatter)
     
-    debug = logging.FileHandler("logs/debug.log", mode='w')
+    debug = logging.FileHandler(os.path.join(LOG_DIR, "debug.log"), mode='w')
     debug.setLevel(logging.DEBUG)
     debug.setFormatter(formatter)
-    
-    db = logging.FileHandler("logs/db.log", mode='w')
+
+    db = logging.FileHandler(os.path.join(LOG_DIR, "db.log"), mode='w')
     db.setLevel(logging.DEBUG)
     db.addFilter(_NameFilter("src.data"))
     db.setFormatter(formatter)
-    
-    api = logging.FileHandler("logs/api.log", mode='w')
+
+    api = logging.FileHandler(os.path.join(LOG_DIR, "api.log"), mode='w')
     api.setLevel(logging.DEBUG)
     api.addFilter(_NameFilter("src.api"))
     api.setFormatter(formatter)
-    
-    integrations = logging.FileHandler("logs/integrations.log", mode='w')
+
+    integrations = logging.FileHandler(os.path.join(LOG_DIR, "integrations.log"), mode='w')
     integrations.setLevel(logging.DEBUG)
     integrations.addFilter(_NameFilter("src.integrations"))
     integrations.setFormatter(formatter)
 
-    models = logging.FileHandler("logs/models.log", mode='w')
+    models = logging.FileHandler(os.path.join(LOG_DIR, "models.log"), mode='w')
     models.setLevel(logging.DEBUG)
     models.addFilter(_NameFilter("src.models"))
     models.setFormatter(formatter)
 
-    services = logging.FileHandler("logs/services.log", mode='w')
+    services = logging.FileHandler(os.path.join(LOG_DIR, "services.log"), mode='w')
     services.setLevel(logging.DEBUG)
     services.addFilter(_NameFilter("src.services"))
     services.setFormatter(formatter)
-    
-    errors = logging.FileHandler("logs/errors.log", mode='w')
+
+    errors = logging.FileHandler(os.path.join(LOG_DIR, "errors.log"), mode='w')
     errors.setLevel(logging.ERROR)
     errors.setFormatter(formatter)
     
