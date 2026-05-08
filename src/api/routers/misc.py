@@ -13,7 +13,7 @@ router = APIRouter()
 _logger = get_logger(__name__)
 
 @router.get("/sync")
-def sync():
+def sync(force_refresh: bool = False):
     try:
         with get_engine().connect() as conn:
             conn.execute(text("SELECT 1"))
@@ -22,7 +22,7 @@ def sync():
         raise HTTPException(status_code=503, detail="Database unavailable, sync aborted.")
     
     last_sync = state.get("last_sync_date")
-    if last_sync and date.fromisoformat(last_sync) == date.today():
+    if last_sync and date.fromisoformat(last_sync) == date.today() and not force_refresh:
         return {"message": "Already synced today."}
 
     try:

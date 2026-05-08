@@ -2,7 +2,7 @@ import pandas as pd
 from src.logging import get_logger
 from datetime import date
 from src.services import get_holdings_eur, get_prices_eur, portfolio_weights, fetch_and_enrich
-from src.data.repositories import get_returns, get_factor_returns, get_portfolios, cache_get, cache_set
+from src.data.repositories import get_returns, get_factor_returns, cache_get, cache_set
 from src.data.repositories import state
 import hashlib
 
@@ -29,11 +29,13 @@ def volatility(returns: pd.Series) -> float:
     return returns.std() * (252 ** 0.5)
     
 def sharpe_ratio(returns: pd.Series, risk_free_rate: pd.Series) -> float:
-    excess = returns - risk_free_rate
+    rf_aligned = risk_free_rate.reindex(returns.index).ffill()
+    excess = returns - rf_aligned
     return (excess.mean() / excess.std()) * (252 ** 0.5)
 
 def sortino_ratio(returns: pd.Series, risk_free_rate: pd.Series) -> float:
-    excess = returns - risk_free_rate
+    rf_aligned = risk_free_rate.reindex(returns.index).ffill()
+    excess = returns - rf_aligned
     downside = excess[excess < 0].std()
     return (excess.mean() / downside) * (252 ** 0.5)
 
@@ -50,30 +52,26 @@ def beta(portfolio_returns: pd.Series, benchmark_returns: pd.Series) -> float:
     return cov / benchmark_returns.var()
 
 
-def _cache_key(names: list[str] | None, sources: list[str] | None, benchmark_ticker: str) -> str:
-    raw = f"{sorted(names or [])}:{sorted(sources or [])}:{benchmark_ticker}:{date.today()}"
+def _cache_key(portfolio_ids: list[int], benchmark_ticker: str) -> str:
+    raw = f"ids:{sorted(portfolio_ids)}:{benchmark_ticker}:{date.today()}"
     return f"kpis:{hashlib.md5(raw.encode()).hexdigest()[:10]}"
 
-def get_portfolio_KPIs(names: list[str] | None, sources: list[str] | None, benchmark_ticker: str = "SPY", force_refresh: bool=False):
-    _logger.info(f"Computing portfolio KPIs | names={names} sources={sources}")
-    
-    cache_key = _cache_key(names, sources, benchmark_ticker)
-    
+def get_portfolio_KPIs(portfolio_ids: list[int], benchmark_ticker: str = "SPY", force_refresh: bool = False):
+    _logger.info(f"Computing portfolio KPIs | portfolio_ids={portfolio_ids}")
+
+    cache_key = _cache_key(portfolio_ids, benchmark_ticker)
+
     if not force_refresh:
         cached = cache_get(cache_key)
         if cached:
-            _logger.info(f"Cache hit for portfolio KPIs | names={names} sources={sources} benchmark={benchmark_ticker}")
+            _logger.info(f"Cache hit for portfolio KPIs | portfolio_ids={portfolio_ids}")
             return cached
-        _logger.info(f"Cache miss for portfolio KPIs | names={names} sources={sources} benchmark={benchmark_ticker}")
-    
-    portfolio_ids = get_portfolios(name=names, source=sources)
-    if not portfolio_ids:
-        raise LookupError("No portfolios found")
-    
-    holdings_all = get_holdings_eur(portfolio_id=[p.id for p in portfolio_ids], all_snapshots=True)
+        _logger.info(f"Cache miss for portfolio KPIs | portfolio_ids={portfolio_ids}")
+
+    holdings_all = get_holdings_eur(portfolio_id=portfolio_ids, all_snapshots=True)
     if holdings_all.empty:
         raise LookupError("No holdings found for portfolio")
-    _logger.debug(f"portfolio_ids={[p.id for p in portfolio_ids]} | holdings_all shape={holdings_all.shape}")
+    _logger.debug(f"portfolio_ids={portfolio_ids} | holdings_all shape={holdings_all.shape}")
         
     tickers = list(holdings_all["ticker"].unique())
     last_sync = state.get("last_sync_date")
@@ -96,7 +94,7 @@ def get_portfolio_KPIs(names: list[str] | None, sources: list[str] | None, bench
         raise LookupError("No return data found for portfolio tickers")
     
     # portfolio weights
-    weights = portfolio_weights(names=names, sources=sources)
+    weights = portfolio_weights(portfolio_ids=portfolio_ids, force_refresh=force_refresh)
     _logger.debug(f"Portfolio weights: {weights}")
     
     factors = get_factor_returns(region="us", frequency="daily", start=start_date, end=date.today())
