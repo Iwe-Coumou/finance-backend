@@ -2,7 +2,9 @@ import pandas as pd
 from src.logging import get_logger
 from datetime import date
 from src.services import get_holdings_eur, get_prices_eur, portfolio_weights, fetch_and_enrich
-from src.data.repositories import get_returns, get_factor_returns, get_portfolios
+from src.data.repositories import get_returns, get_factor_returns, get_portfolios, cache_get, cache_set
+from src.data.repositories import state
+import hashlib
 
 _logger = get_logger(__name__)
 
@@ -47,9 +49,23 @@ def beta(portfolio_returns: pd.Series, benchmark_returns: pd.Series) -> float:
     cov = portfolio_returns.cov(benchmark_returns)
     return cov / benchmark_returns.var()
 
-    
-def get_portfolio_KPIs(names: list[str] | None, sources: list[str] | None, benchmark_ticker: str = "SPY"):
+
+def _cache_key(names: list[str] | None, sources: list[str] | None, benchmark_ticker: str) -> str:
+    raw = f"{sorted(names or [])}:{sorted(sources or [])}:{benchmark_ticker}:{date.today()}"
+    return f"kpis:{hashlib.md5(raw.encode()).hexdigest()[:10]}"
+
+def get_portfolio_KPIs(names: list[str] | None, sources: list[str] | None, benchmark_ticker: str = "SPY", force_refresh: bool=False):
     _logger.info(f"Computing portfolio KPIs | names={names} sources={sources}")
+    
+    cache_key = _cache_key(names, sources, benchmark_ticker)
+    
+    if not force_refresh:
+        cached = cache_get(cache_key)
+        if cached:
+            _logger.info(f"Cache hit for portfolio KPIs | names={names} sources={sources} benchmark={benchmark_ticker}")
+            return cached
+        _logger.info(f"Cache miss for portfolio KPIs | names={names} sources={sources} benchmark={benchmark_ticker}")
+    
     portfolio_ids = get_portfolios(name=names, source=sources)
     if not portfolio_ids:
         raise LookupError("No portfolios found")
@@ -60,7 +76,10 @@ def get_portfolio_KPIs(names: list[str] | None, sources: list[str] | None, bench
     _logger.debug(f"portfolio_ids={[p.id for p in portfolio_ids]} | holdings_all shape={holdings_all.shape}")
         
     tickers = list(holdings_all["ticker"].unique())
-    #fetch_and_enrich(tickers=tickers)
+    last_sync = state.get("last_sync_date")
+    if not last_sync or date.fromisoformat(last_sync) < date.today():
+        _logger.info("Data not synced today, running fetch_and_enrich")
+        fetch_and_enrich(tickers=tickers)
     
     # latest and earliest holdings
     latest = holdings_all.sort_values("snapshot_date").groupby("ticker").last().reset_index()
@@ -86,7 +105,6 @@ def get_portfolio_KPIs(names: list[str] | None, sources: list[str] | None, bench
     _logger.info(f"Fetched {len(holdings_all)} holdings accross {len(tickers)} tickers | start_date={start_date}")
     # KPIS
     
-    # latest_date = prices["date"].max()
     raw_return, pct_return = total_return(holdings=latest, current_price=current_prices)
     days_held = (date.today() - start_date).days
     ann_return = annualized_return(pct_return=pct_return, days_held=days_held) if days_held > 30 else None
@@ -113,7 +131,6 @@ def get_portfolio_KPIs(names: list[str] | None, sources: list[str] | None, bench
     _logger.debug(f"Returns matrix shape: {returns_wide.shape} | date range: {returns_wide.index.min()} to {returns_wide.index.max()}")
     
     portfolio_returns = returns_wide.mul(weights).sum(axis=1)
-    #print(type(portfolio_returns.index[0]), type(rf_series.index[0]))
     _logger.debug(f"Portfolio returns: {portfolio_returns.isna().sum()} NaN values out of {len(portfolio_returns)} days")
     _logger.debug(f"RF series: {len(rf_series)} days | overlap with portfolio returns: {portfolio_returns.index.isin(rf_series.index).sum()} days")
     
@@ -135,23 +152,31 @@ def get_portfolio_KPIs(names: list[str] | None, sources: list[str] | None, bench
     beta_val = beta(portfolio_returns=portfolio_returns, benchmark_returns=benchmark_returns_series)
     
     _logger.info("KPI comptutation complete")
-    return {
-    "portfolio_value": portfolio_value,
-    "num_holdings": num_holdings,
-    "raw_return": raw_return,
-    "pct_return": pct_return,
-    "annualized_return": ann_return,
-    "vs_benchmark": vs_benchmark,
-    "ytd_raw": raw_return_ytd,
-    "ytd_pct": pct_return_ytd,
-    "volatility": vol,
-    "sharpe": sharpe,
-    "sortino": sortino,
-    "max_drawdown": drawdown,
-    "max_drawdown_start": dd_start,
-    "max_drawdown_end": dd_end,
-    "beta": beta_val,
-}
+    kpis = {
+        "portfolio_value": portfolio_value,
+        "num_holdings": num_holdings,
+        "raw_return": raw_return,
+        "pct_return": pct_return,
+        "annualized_return": ann_return,
+        "vs_benchmark": vs_benchmark,
+        "ytd_raw": raw_return_ytd,
+        "ytd_pct": pct_return_ytd,
+        "volatility": vol,
+        "sharpe": sharpe,
+        "sortino": sortino,
+        "max_drawdown": drawdown,
+        "max_drawdown_start": dd_start,
+        "max_drawdown_end": dd_end,
+        "beta": beta_val,
+    }
+    
+    serialized = {
+        k: v.isoformat() if isinstance(v, date) else v
+        for k, v in kpis.items()
+    }
+    cache_set(cache_key, serialized, ttl=60*60*4)
+    return kpis
+    
 
     
     

@@ -6,6 +6,7 @@ from src.data.repositories.macro import store_macro_data
 from src.data.repositories.fundamentals import store_fundamentals
 from src.data.repositories.portfolios import get_portfolios, get_portfolio, write_portfolio
 from src.data.repositories.holdings import get_holdings, get_holdings_df, get_holding, write_holding
+from src.data.repositories.cache import cache_get, cache_set, cache_delete
 
 __all__ = [
     "get_assets", "store_asset_data", "update_figis", "update_asset_region", "update_isins",
@@ -15,5 +16,6 @@ __all__ = [
     "store_macro_data",
     "store_fundamentals",
     "get_portfolios", "get_portfolio", "write_portfolio",
-    "get_holdings", "get_holdings_df", "get_holding", "write_holding"
+    "get_holdings", "get_holdings_df", "get_holding", "write_holding",
+    "cache_get", "cache_set", "cache_delete"
 ]

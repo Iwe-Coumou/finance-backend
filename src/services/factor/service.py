@@ -1,20 +1,14 @@
-import json
 import hashlib
 from datetime import date, timedelta
 from dataclasses import asdict
 from src.data.config import TEST_TICKERS
 
-import redis
-
 from src.services.factor.data_alignment import load_aligned_data
 from src.models.factor import run_regressions, FactorRegressionResult
-from src.config import get_env_var
+from src.data.repositories.cache import cache_get, cache_set
 from src.logging.logger import get_logger
 
 _logger = get_logger(__name__)
-REDIS_URL = get_env_var("REDIS_URL", _logger)
-
-redis_client: redis.Redis = redis.Redis.from_url(REDIS_URL)  # type: ignore[type-arg]
 
 CACHE_TTL = {
     "daily": 60*60*24,
@@ -48,32 +42,23 @@ def get_factor_results(
     _logger.debug(f"Cache key: {cache_key}")
     
     if not force_refresh:
-        try:
-            cached = redis_client.get(cache_key)
-            if cached:
-                _logger.info(f"Cache hit for {tickers} | region={region} frequency={frequency}")
-                raw = json.loads(cached)  # type: ignore[arg-type]
-                return {ticker: FactorRegressionResult(**data) for ticker, data in raw.items()}
-        except Exception as e:
-            _logger.warning(f"Redis read failed, falling through to regression: {e}")
-    
-    _logger.info(f"Cache miss for {tickers} | region={region} frequency={frequency} — running regression")
-    
+        cached = cache_get(cache_key)
+        if cached:
+            _logger.info(f"Cache hit for {tickers} | region={region} frequency={frequency}")
+            return {ticker: FactorRegressionResult(**data) for ticker, data in cached.items()}
+
+        _logger.info(f"Cache miss for {tickers} | region={region} frequency={frequency} — running regression")
+
     excess_returns, factors = load_aligned_data(tickers, region, frequency, start, end)
-    
+
     if excess_returns.empty:
         _logger.warning(f"No data returned from loader for {tickers}, aborting")
         return {}
-    
+
     results = run_regressions(excess_returns, factors)
-    
-    try:
-        serialized = {ticker: asdict(r) for ticker, r in results.items()}
-        redis_client.setex(cache_key, CACHE_TTL[frequency], json.dumps(serialized))
-        _logger.debug(f"Cached results for {tickers} with TTL={CACHE_TTL[frequency]}s")
-    except Exception as e:
-        _logger.warning(f"Redis write failed, results not cached: {e}")
-        
+
+    cache_set(cache_key, {ticker: asdict(r) for ticker, r in results.items()}, CACHE_TTL[frequency])
+
     return results
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-from src.data.repositories import get_holdings_df, get_prices, get_assets
+from src.data.repositories import get_holdings_df, get_prices, get_assets, cache_get, cache_set
 from src.integrations.fmp import get_rate, FMPClient
 from src.logging.logger import get_logger
 import pandas as pd
@@ -33,15 +33,31 @@ def _get_symbols(currencies: list[str]) -> dict[str, tuple[str, str]]:
     _logger.debug(f"Resolved forex symbols: {result}")
     return result
 
+def _cache_key(symbol: str) -> str:
+    return f"forex:{symbol}:{date.today()}"
+
+
 def _conversion_map(symbols: dict[str, tuple[str, str]]) -> dict[str, float]:
-    eurusd = get_rate("EURUSD", _client)
-    _logger.debug(f"EURUSD rate: {eurusd:.6f}")
+    eurusd_key = _cache_key("EURUSD")
+    eurusd = cache_get(eurusd_key)
+    if eurusd is None:
+        eurusd = get_rate("EURUSD", _client)
+        cache_set(eurusd_key, eurusd, ttl=60*60*4)
+        _logger.debug(f"EURUSD rate fetched: {eurusd:.6f}")
+    else:
+        _logger.debug(f"EURUSD rate from cache: {eurusd:.6f}")
+
     rates = {"USD": 1/eurusd, "EUR": 1.0}
     for currency, (symbol, direction) in symbols.items():
-        rate = get_rate(symbol, _client)
+        symbol_key = _cache_key(symbol)
+        rate = cache_get(symbol_key)
+        if rate is None:
+            rate = get_rate(symbol, _client)
+            cache_set(symbol_key, rate, ttl=60*60*4)
         usd_rate = rate if direction == "base" else 1/rate
         rates[currency] = usd_rate / eurusd
         _logger.debug(f"{currency} -> EUR rate: {rates[currency]:.6f} (via {symbol})")
+
     return rates
 
 

@@ -16,9 +16,9 @@ def get_portfolios_all(source: list[str] | None = Query(None), name: list[str] |
     return portfolios
 
 @router.get("/weights", response_model=PortfolioWeightsResponse)
-def get_portfolio_weights(name: list[str] | None = Query(None), source: list[str] | None = Query(None)):
+def get_portfolio_weights(name: list[str] | None = Query(None), source: list[str] | None = Query(None), force_refresh: bool = False):
     try:
-        weights = portfolio_weights(names=name, sources=source)
+        weights = portfolio_weights(names=name, sources=source, force_refresh=force_refresh)
     except LookupError:
         raise HTTPException(status_code=404, detail="No portfolio found")
     if not weights:
@@ -27,9 +27,9 @@ def get_portfolio_weights(name: list[str] | None = Query(None), source: list[str
     return PortfolioWeightsResponse(weights)
 
 @router.get("/KPIs", response_model=PortfolioKPIResponse)
-def get_kpis(name: list[str] | None = Query(None), source: list[str] | None = Query(None)):
+def get_kpis(name: list[str] | None = Query(None), source: list[str] | None = Query(None), force_refresh: bool = False):
     try:
-        return get_portfolio_KPIs(names=name, sources=source)
+        return get_portfolio_KPIs(names=name, sources=source, force_refresh=force_refresh)
     except LookupError as e:
         _logger.warning(f"KPI lookup failed | name={name} source={source} | {e}")
         raise HTTPException(status_code=404, detail=str(e))
