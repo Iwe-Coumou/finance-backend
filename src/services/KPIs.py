@@ -78,6 +78,7 @@ def get_portfolio_KPIs(portfolio_ids: list[int], benchmark_ticker: str = "SPY", 
     if not last_sync or date.fromisoformat(last_sync) < date.today():
         _logger.info("Data not synced today, running fetch_and_enrich")
         fetch_and_enrich(tickers=tickers)
+        state.set("last_sync_date", date.today().isoformat())
     
     # latest and earliest holdings
     latest = holdings_all.sort_values("snapshot_date").groupby("ticker").last().reset_index()
